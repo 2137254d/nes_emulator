@@ -59,3 +59,54 @@ void olc6502::clock()
 
 	cycles--;
 }
+
+void olc6502::SetFlag(FLAG6502 f, bool v)
+{
+	if (v)
+		status |= f;
+	else
+		status &= ~f;
+}
+
+// Addressing Modes
+
+// Implied
+uint8_t olc6502::IMP()
+{
+	fetched = a;
+	return 0;
+}
+
+// Immediate
+uint8_t olc6502::IMM()
+{
+	addr_abs = pc++;
+	return 0;
+}
+
+// 0 Page Addressing
+uint8_t olc6502::ZP0()
+{
+	addr_abs = read(pc);
+	pc++;
+	addr_abs &= 0x00FF;
+	return 0;
+}
+
+// 0 Page Addressing with X register offset
+uint8_t olc6502::ZPX()
+{
+	addr_abs = (read(pc) + x);
+	pc++;
+	addr_abs &= 0x00FF;
+	return 0;
+}
+
+// 0 Page Adressing with Y register offset 
+uint8_t olc6502::ZPY()
+{
+	addr_abs = (read(pc) + y); 
+	pc++;
+	addr_abs &= 0x00FF;
+	return 0;
+}
