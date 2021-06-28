@@ -3,6 +3,7 @@
 olc6502::olc6502()
 {
 	using a = olc6502;
+	// lookup table of opcodes 
 	lookup = 
 	{
 		{ "BRK", &a::BRK, &a::IMM, 7 },{ "ORA", &a::ORA, &a::IZX, 6 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "???", &a::NOP, &a::IMP, 3 },{ "ORA", &a::ORA, &a::ZP0, 3 },{ "ASL", &a::ASL, &a::ZP0, 5 },{ "???", &a::XXX, &a::IMP, 5 },{ "PHP", &a::PHP, &a::IMP, 3 },{ "ORA", &a::ORA, &a::IMM, 2 },{ "ASL", &a::ASL, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::NOP, &a::IMP, 4 },{ "ORA", &a::ORA, &a::ABS, 4 },{ "ASL", &a::ASL, &a::ABS, 6 },{ "???", &a::XXX, &a::IMP, 6 },
@@ -37,4 +38,24 @@ uint8_t olc6502::read(uint16_t)
 void olc6502::write(uint16_t a, uint8_t d)
 {
 	bus->(a, d);
+}
+
+void olc6502::clock()
+{
+	if (cycles == 0)
+	{
+		opcode = read(pc);
+		pc++;
+
+		// Get the starting number of cycles
+		cycles = lookup[opcode].cycles;
+
+		(this->*lookup[opcode].addrmode)();
+
+		(this->*lookup[opcode].operate)();
+
+		cycles += (additional_cycle1 & additional_cycle2);
+	}
+
+	cycles--;
 }

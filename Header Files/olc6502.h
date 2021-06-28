@@ -92,4 +92,6 @@ private:
 		uint8_t(olc6502::*addrmode)(void) = nullptr;
 		uint8_t		cycles = 0;
 	};
+
+	std::vector<INSTRUCTION> lookup;
 };
