@@ -102,11 +102,99 @@ uint8_t olc6502::ZPX()
 	return 0;
 }
 
-// 0 Page Adressing with Y register offset 
+// 0 Page Addressing with Y register offset 
 uint8_t olc6502::ZPY()
 {
 	addr_abs = (read(pc) + y); 
 	pc++;
 	addr_abs &= 0x00FF;
 	return 0;
+}
+
+// Absolute address
+uint8_t olc6502::ABS()
+{
+	uint16_t lo = read(pc);
+	pc++;
+	uint16_t hi = read(pc);
+	pc++;
+
+	addr_abs = (hi << 8) | lo;
+
+	return 0;
+}
+
+
+// Absolute adressing with X register offset
+uint8_t olc6502::ABX()
+{
+	uint16_t lo = read(pc);
+	pc++;
+	uint16_t hi = read(pc);	
+	pc++;
+
+	addr_abs = (hi << 8) | lo;
+	addr_abs += x;
+
+	if((addr_abs & 0xFF00) !- (h << 8)) 
+		return 1;
+	else
+		return 0;
+}
+
+// Emulating a bug in the hardware, if the low byte of the
+// supplied address is 0xF, then to read the high byte of 
+// the actual address we need to cross a page boundry.
+uint8_t olc6502::IND()
+{
+	uint16_t ptr_lo = read(pc);
+	pc++;
+	uint16_t ptr_hi = read(pc);
+	pc++;
+
+	uint16_t ptr = (ptr_hi << 8) | read(ptr + 0);
+
+	if (ptr_lo == 0x00FF)
+	{
+		addr_abs = (read(ptr & 0xff00) << 8) | read(ptr + 0);
+	}
+	else 
+	{	
+		// adding one to the ptr of an address "changes the page"
+		addr_abs = (read(ptr + 1) << 8) | read(ptr + 0);
+	}
+
+	return 0;
+}
+
+// Indirect addressing of the 0 page, with X register offset
+uint8_t olc6502::IZX()
+{
+	uint16_t t = read(pc);
+	pc++;
+
+	uint16_t lo = read((uint16_t)(t + (uint16_t)x) & 0x00FF);
+	uint16_t hi = read((uint16_t)(t + (uint16_t)x + 1) & 0x00FF);
+
+	addr_abs = (hi << 8) | lo;
+
+	return 0;
+}
+
+// Indirect addressing of the 0 page, with Y register offset
+uint8_t olc6502::IZY()
+{
+	uint16_t t = read(pc);
+	pc++;
+
+	uint16_t lo = read(t & 0x00FF);
+	uint16_t hi = read((t + 1) & 0x00FF);
+
+	addr_abs = (hi << 8) | lo;
+	addr_abs += y;
+
+	if ((addr_abs & 0xFF00) != (hi << 8))
+		return 1;
+	else 
+		return 0;
 }
