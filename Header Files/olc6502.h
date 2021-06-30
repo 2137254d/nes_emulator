@@ -1,5 +1,7 @@
 #pragma once
-#include <cstdint>
+#include <string>
+#include <vector>
+#include <map>
 
 class Bus;
 
@@ -29,7 +31,45 @@ public:
 	uint8_t pc = 0x0000; // Program Counter
 	uint8_t status = 0x00; // Status Register
 
-	void ConnectBus(Bus* n) { bus = n }
+	void ConnectBus(Bus* n) { bus = n ;}
+
+
+private:
+
+
+	// unofficial opcode catcher
+	uint8_t XXX();
+
+	// interupt signals
+	void clock();
+	void reset();
+	void irq();
+	void nmi(); 
+
+	uint8_t  fetched 		= 0x00;
+	uint8_t  temp 			= 0x0000;
+	uint16_t addr_abs 		= 0x0000;
+	uint16_t addr_rel 		= 0x00;
+	uint8_t  opcode			= 0x00;
+	uint8_t  cycles			= 0;
+	uint32_t clock_count 	= 0;
+
+	// Linkage to the communication bus
+	Bus* bus = nullptr;
+	uint8_t read(uint16_t a);
+	void	write(uint16_t a, uint8_t d);
+
+	uint8_t fetch();
+
+	struct INSTRUCTION
+	{
+		std::string name;
+		uint8_t(olc6502::*operate)(void) = nullptr;
+		uint8_t(olc6502::*addrmode)(void) = nullptr;
+		uint8_t		cycles = 0;
+	};
+
+	std::vector<INSTRUCTION> lookup;
 
 private:
 
@@ -42,8 +82,8 @@ private:
 	uint8_t IZX();	uint8_t IZY();
 
 private:
-	// OPCODES
 
+	// OPCODES
 	uint8_t ADC();	uint8_t AND();	uint8_t ASL();	uint8_t BCC();
 	uint8_t BCS();	uint8_t BEQ();	uint8_t BIT();	uint8_t BMI();
 	uint8_t BNE();	uint8_t BPL();	uint8_t BRK();	uint8_t BVC();
@@ -59,39 +99,10 @@ private:
 	uint8_t STX();	uint8_t STY();	uint8_t TAX();	uint8_t TAY();
 	uint8_t TSX();	uint8_t TXA();	uint8_t TXS();	uint8_t TYA();
 
-	// unofficial opcode catcher
-
-	uint8_t XXX();
-
-	// interupt signals
-
-	void clock();
-	void reset();
-	void irq();
-	void nmi(); 
-
-	uint8_t fetch();
-	uint8_t fetched = 0x00;
-
-	uint16_t addr_abs = 0x0000;
-	uint16_t addr_rel = 0x00;
-	uint8_t opcode = 0x00;
-
 private:
-	Bus* bus = nullptr;
-	uint8_t read(uint16_t a);
-	void	write(uint16_t a, uint8_t d);
 
 	uint8_t GetFlag(FLAG6502 f);
 	void	SetFlag(FLAG6502 f, bool v);
 
-	struct INSTRUCTION
-	{
-		std::string name;
-		uint8_t(olc6502::*operate)(void) = nullptr;
-		uint8_t(olc6502::*addrmode)(void) = nullptr;
-		uint8_t		cycles = 0;
-	};
 
-	std::vector<INSTRUCTION> lookup;
 };

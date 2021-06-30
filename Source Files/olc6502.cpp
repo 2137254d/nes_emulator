@@ -22,7 +22,7 @@ olc6502::olc6502()
 		{ "BNE", &a::BNE, &a::REL, 2 },{ "CMP", &a::CMP, &a::IZY, 5 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "???", &a::NOP, &a::IMP, 4 },{ "CMP", &a::CMP, &a::ZPX, 4 },{ "DEC", &a::DEC, &a::ZPX, 6 },{ "???", &a::XXX, &a::IMP, 6 },{ "CLD", &a::CLD, &a::IMP, 2 },{ "CMP", &a::CMP, &a::ABY, 4 },{ "NOP", &a::NOP, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 7 },{ "???", &a::NOP, &a::IMP, 4 },{ "CMP", &a::CMP, &a::ABX, 4 },{ "DEC", &a::DEC, &a::ABX, 7 },{ "???", &a::XXX, &a::IMP, 7 },
 		{ "CPX", &a::CPX, &a::IMM, 2 },{ "SBC", &a::SBC, &a::IZX, 6 },{ "???", &a::NOP, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "CPX", &a::CPX, &a::ZP0, 3 },{ "SBC", &a::SBC, &a::ZP0, 3 },{ "INC", &a::INC, &a::ZP0, 5 },{ "???", &a::XXX, &a::IMP, 5 },{ "INX", &a::INX, &a::IMP, 2 },{ "SBC", &a::SBC, &a::IMM, 2 },{ "NOP", &a::NOP, &a::IMP, 2 },{ "???", &a::SBC, &a::IMP, 2 },{ "CPX", &a::CPX, &a::ABS, 4 },{ "SBC", &a::SBC, &a::ABS, 4 },{ "INC", &a::INC, &a::ABS, 6 },{ "???", &a::XXX, &a::IMP, 6 },
 		{ "BEQ", &a::BEQ, &a::REL, 2 },{ "SBC", &a::SBC, &a::IZY, 5 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "???", &a::NOP, &a::IMP, 4 },{ "SBC", &a::SBC, &a::ZPX, 4 },{ "INC", &a::INC, &a::ZPX, 6 },{ "???", &a::XXX, &a::IMP, 6 },{ "SED", &a::SED, &a::IMP, 2 },{ "SBC", &a::SBC, &a::ABY, 4 },{ "NOP", &a::NOP, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 7 },{ "???", &a::NOP, &a::IMP, 4 },{ "SBC", &a::SBC, &a::ABX, 4 },{ "INC", &a::INC, &a::ABX, 7 },{ "???", &a::XXX, &a::IMP, 7 },
-	}
+	};
 }
 
 
@@ -37,18 +37,25 @@ uint8_t olc6502::read(uint16_t)
 
 void olc6502::write(uint16_t a, uint8_t d)
 {
-	bus->(a, d);
+	bus->write(a, d);
 }
 
 void olc6502::clock()
 {
 	if (cycles == 0)
 	{
+		SetFlag(U, true);
+
 		opcode = read(pc);
+
 		pc++;
 
 		// Get the starting number of cycles
 		cycles = lookup[opcode].cycles;
+
+		uint8_t additional_cycle1 = (this->*lookup[opcode].addrmode)();
+
+		uint8_t additional_cycle2 = (this->*lookup[opcode].addrmode)(); 
 
 		(this->*lookup[opcode].addrmode)();
 
@@ -136,7 +143,7 @@ uint8_t olc6502::ABX()
 	addr_abs = (hi << 8) | lo;
 	addr_abs += x;
 
-	if((addr_abs & 0xFF00) !- (h << 8)) 
+	if((addr_abs & 0xFF00) != (hi << 8)) 
 		return 1;
 	else
 		return 0;
@@ -365,5 +372,136 @@ uint8_t olc6502::CLC()
 uint8_t olc6502::CLD()
 {
 	SetFlag(D, false);
+	return 0;
+}
+
+// Add instruction
+uint8_t olc6502::ADC()
+{
+	fetch();
+	temp = (uint16_t)a + (uint8_t)fetched + (uint16_t)GetFlag(C);
+	SetFlag(C, temp > 255);
+	SetFlag(Z, ((temp & 0x00FF) == 0));
+	SetFlag(V, (~((uint16_t)a ^ (uint16_t)fetched) & ((uint16_t)a ^ (uint16_t)temp)) & 0x0080);
+	SetFlag(N, temp & 0x80);
+	a = temp & 0x00FF;
+	return 1;
+}
+
+// Subtraction Instruction
+uint8_t olc6502::SBC()
+{
+	fetch();
+	 
+	uint16_t value = ((uint16_t)fetched) ^ 0x00ff;
+	temp = (uint16_t)a + value + (uint16_t)GetFlag(C);
+	SetFlag(C, temp > 255);
+	SetFlag(Z, ((temp & 0x00FF) == 0));
+	SetFlag(V, (temp ^ (uint16_t)a) & (temp ^ value) & 0x0080);
+	SetFlag(N,  temp & 0x0080);
+	a = temp & 0x00FF;
+	return 1;
+}
+
+// Push to stack
+uint8_t olc6502::PHA()
+{
+	write(0x0100 + stkptr, a);
+	stkptr--;
+	return 0;
+}
+
+// Pop from Stack
+uint8_t olc6502::PLA()
+{
+	stkptr++;
+	a = read(0x0100 + stkptr);
+	SetFlag(Z, a == 0x00);
+	SetFlag(N, a & 0x80);
+	return 0;
+}
+
+
+// Reset
+void olc6502::reset()
+{
+	a = 0;
+	x = 0;
+	y = 0;
+	stkptr = 0xFD;
+	status = 0x00 | U;
+
+	addr_abs = 0xFFFC;
+	uint16_t lo = read(addr_abs + 0);
+	uint16_t hi = read(addr_abs + 1);
+
+	pc = (hi << 8) | lo;
+
+	addr_rel = 0x0000;
+	addr_abs = 0x0000;
+	fetched = 0x00;
+
+	cycles = 8;
+}
+
+// Maskable Interupt
+void olc6502::irq()
+{
+	if (GetFlag(I) == 0)
+	{
+		write(0x0100 + stkptr, (pc >> 8) & 0x00FF);
+		stkptr--;
+		write(0x0100 + stkptr, pc & 0x00FF);
+		stkptr--;
+
+		SetFlag(B, 0);
+		SetFlag(U, 1);
+		SetFlag(I, 1);
+		write(0x0100 + stkptr, status);
+		stkptr--;
+
+		addr_abs = 0xFFFE;
+		uint16_t lo = read(addr_abs + 0);
+		uint16_t hi = read(addr_abs + 1);
+		pc = (hi << 8) | lo;
+
+		cycles = 7;
+	}
+}
+
+// Non-maskable interupt
+void olc6502::nmi()
+{
+	write(0x0100 + stkptr, (pc >> 8) & 0x00FF);
+	stkptr--;
+	write(0x0100 + stkptr, pc & 0x00FF);
+	stkptr--;
+
+	SetFlag(B, 0);
+	SetFlag(U, 1);
+	SetFlag(I, 1);
+	write(0x0100 + stkptr, status);
+	stkptr--;
+
+	addr_abs = 0xFFFA;
+	uint16_t lo = read(addr_abs + 0);
+	uint16_t hi = read(addr_abs + 1);
+	pc = (hi << 8) | lo;
+
+	cycles = 8;
+}
+
+// Return from interupt
+uint8_t olc6502::RTI()
+{
+	stkptr;
+	status = read(0x0100 + stkptr);
+	status &= ~B;
+	status &= ~U;
+
+	stkptr++;
+	pc = (uint16_t)read(0x0100 + stkptr);
+	stkptr++;
+	pc |= (uint16_t)read(0x0100 + stkptr) << 8;
 	return 0;
 }
