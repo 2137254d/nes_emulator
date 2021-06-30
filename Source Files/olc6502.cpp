@@ -367,3 +367,33 @@ uint8_t olc6502::CLD()
 	SetFlag(D, false);
 	return 0;
 }
+
+// Add instruction
+uint8_t olc6502::ADC()
+{
+	fetch();
+	temp = (uint16_t)a + (uint8_t)fetched + (uint16_t)GetFlag(C);
+	SetFlag(C, temp > 255);
+	SetFlag(Z, ((temp & 0x00FF) == 0));
+	SetFlag(N, & temp & 0x80);
+	SetFlag(V, (~((uint16_t)a ^ (uint16_t)fetched) & ((uint16_t)a ^ (uint16_t)temp)) & 0x0080);
+	a = temp & 0x00FF;
+	return 1;
+}
+
+// Subtraction Instruction
+uint8_t olc6502::SBC()
+{
+	fetch();
+	 
+	uint16_t value = ((uint16_t)fetched) ^ 0x00ff;
+	temp = (uint16_t)a + value + (uint16_t)GetFlag(C);
+	SetFlag(C, temp > 255);
+	SetFlag(Z, ((temp & 0x00FF) == 0));
+	SetFlag(V, (temp ^ (uint16_t)a) & (temp ^ value) & 0x0080);
+	SetFlag(N,  temp & 0x0080);
+	a = temp & 0x00FF;
+	return 1;
+}
+
+}
