@@ -37,7 +37,7 @@ uint8_t olc6502::read(uint16_t)
 
 void olc6502::write(uint16_t a, uint8_t d)
 {
-	bus->(a, d);
+	bus->write(a, d);
 }
 
 void olc6502::clock()
@@ -52,6 +52,10 @@ void olc6502::clock()
 
 		// Get the starting number of cycles
 		cycles = lookup[opcode].cycles;
+
+		uint8_t additional_cycle1 = (this->*lookup[opcode].addrmode)();
+
+		uint8_t additional_cycle2 = (this->*lookup[opcode].addrmode)(); 
 
 		(this->*lookup[opcode].addrmode)();
 
@@ -139,7 +143,7 @@ uint8_t olc6502::ABX()
 	addr_abs = (hi << 8) | lo;
 	addr_abs += x;
 
-	if((addr_abs & 0xFF00) !- (h << 8)) 
+	if((addr_abs & 0xFF00) != (hi << 8)) 
 		return 1;
 	else
 		return 0;
@@ -379,7 +383,7 @@ uint8_t olc6502::ADC()
 	SetFlag(C, temp > 255);
 	SetFlag(Z, ((temp & 0x00FF) == 0));
 	SetFlag(V, (~((uint16_t)a ^ (uint16_t)fetched) & ((uint16_t)a ^ (uint16_t)temp)) & 0x0080);
-	SetFlag(N, & temp & 0x80);
+	SetFlag(N, temp & 0x80);
 	a = temp & 0x00FF;
 	return 1;
 }
@@ -465,7 +469,7 @@ void olc6502::irq()
 	}
 }
 
-// Non maskable interupt
+// Non-maskable interupt
 void olc6502::nmi()
 {
 	write(0x0100 + stkptr, (pc >> 8) & 0x00FF);
@@ -485,4 +489,19 @@ void olc6502::nmi()
 	pc = (hi << 8) | lo;
 
 	cycles = 8;
+}
+
+// Return from interupt
+uint8_t olc6502::RTI()
+{
+	stkptr;
+	status = read(0x0100 + stkptr);
+	status &= ~B;
+	status &= ~U;
+
+	stkptr++;
+	pc = (uint16_t)read(0x0100 + stkptr);
+	stkptr++;
+	pc |= (uint16_t)read(0x0100 + stkptr) << 8;
+	return 0;
 }
