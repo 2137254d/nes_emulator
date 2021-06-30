@@ -22,7 +22,7 @@ olc6502::olc6502()
 		{ "BNE", &a::BNE, &a::REL, 2 },{ "CMP", &a::CMP, &a::IZY, 5 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "???", &a::NOP, &a::IMP, 4 },{ "CMP", &a::CMP, &a::ZPX, 4 },{ "DEC", &a::DEC, &a::ZPX, 6 },{ "???", &a::XXX, &a::IMP, 6 },{ "CLD", &a::CLD, &a::IMP, 2 },{ "CMP", &a::CMP, &a::ABY, 4 },{ "NOP", &a::NOP, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 7 },{ "???", &a::NOP, &a::IMP, 4 },{ "CMP", &a::CMP, &a::ABX, 4 },{ "DEC", &a::DEC, &a::ABX, 7 },{ "???", &a::XXX, &a::IMP, 7 },
 		{ "CPX", &a::CPX, &a::IMM, 2 },{ "SBC", &a::SBC, &a::IZX, 6 },{ "???", &a::NOP, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "CPX", &a::CPX, &a::ZP0, 3 },{ "SBC", &a::SBC, &a::ZP0, 3 },{ "INC", &a::INC, &a::ZP0, 5 },{ "???", &a::XXX, &a::IMP, 5 },{ "INX", &a::INX, &a::IMP, 2 },{ "SBC", &a::SBC, &a::IMM, 2 },{ "NOP", &a::NOP, &a::IMP, 2 },{ "???", &a::SBC, &a::IMP, 2 },{ "CPX", &a::CPX, &a::ABS, 4 },{ "SBC", &a::SBC, &a::ABS, 4 },{ "INC", &a::INC, &a::ABS, 6 },{ "???", &a::XXX, &a::IMP, 6 },
 		{ "BEQ", &a::BEQ, &a::REL, 2 },{ "SBC", &a::SBC, &a::IZY, 5 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "???", &a::NOP, &a::IMP, 4 },{ "SBC", &a::SBC, &a::ZPX, 4 },{ "INC", &a::INC, &a::ZPX, 6 },{ "???", &a::XXX, &a::IMP, 6 },{ "SED", &a::SED, &a::IMP, 2 },{ "SBC", &a::SBC, &a::ABY, 4 },{ "NOP", &a::NOP, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 7 },{ "???", &a::NOP, &a::IMP, 4 },{ "SBC", &a::SBC, &a::ABX, 4 },{ "INC", &a::INC, &a::ABX, 7 },{ "???", &a::XXX, &a::IMP, 7 },
-	}
+	};
 }
 
 
@@ -44,7 +44,10 @@ void olc6502::clock()
 {
 	if (cycles == 0)
 	{
+		SetFlag(U, true);
+
 		opcode = read(pc);
+
 		pc++;
 
 		// Get the starting number of cycles
@@ -375,8 +378,8 @@ uint8_t olc6502::ADC()
 	temp = (uint16_t)a + (uint8_t)fetched + (uint16_t)GetFlag(C);
 	SetFlag(C, temp > 255);
 	SetFlag(Z, ((temp & 0x00FF) == 0));
-	SetFlag(N, & temp & 0x80);
 	SetFlag(V, (~((uint16_t)a ^ (uint16_t)fetched) & ((uint16_t)a ^ (uint16_t)temp)) & 0x0080);
+	SetFlag(N, & temp & 0x80);
 	a = temp & 0x00FF;
 	return 1;
 }
@@ -396,4 +399,90 @@ uint8_t olc6502::SBC()
 	return 1;
 }
 
+// Push to stack
+uint8_t olc6502::PHA()
+{
+	write(0x0100 + stkptr, a);
+	stkptr--;
+	return 0;
+}
+
+// Pop from Stack
+uint8_t olc6502::PLA()
+{
+	stkptr++;
+	a = read(0x0100 + stkptr);
+	SetFlag(Z, a == 0x00);
+	SetFlag(N, a & 0x80);
+	return 0;
+}
+
+
+// Reset
+void olc6502::reset()
+{
+	a = 0;
+	x = 0;
+	y = 0;
+	stkptr = 0xFD;
+	status = 0x00 | U;
+
+	addr_abs = 0xFFFC;
+	uint16_t lo = read(addr_abs + 0);
+	uint16_t hi = read(addr_abs + 1);
+
+	pc = (hi << 8) | lo;
+
+	addr_rel = 0x0000;
+	addr_abs = 0x0000;
+	fetched = 0x00;
+
+	cycles = 8;
+}
+
+// Maskable Interupt
+void olc6502::irq()
+{
+	if (GetFlag(I) == 0)
+	{
+		write(0x0100 + stkptr, (pc >> 8) & 0x00FF);
+		stkptr--;
+		write(0x0100 + stkptr, pc & 0x00FF);
+		stkptr--;
+
+		SetFlag(B, 0);
+		SetFlag(U, 1);
+		SetFlag(I, 1);
+		write(0x0100 + stkptr, status);
+		stkptr--;
+
+		addr_abs = 0xFFFE;
+		uint16_t lo = read(addr_abs + 0);
+		uint16_t hi = read(addr_abs + 1);
+		pc = (hi << 8) | lo;
+
+		cycles = 7;
+	}
+}
+
+// Non maskable interupt
+void olc6502::nmi()
+{
+	write(0x0100 + stkptr, (pc >> 8) & 0x00FF);
+	stkptr--;
+	write(0x0100 + stkptr, pc & 0x00FF);
+	stkptr--;
+
+	SetFlag(B, 0);
+	SetFlag(U, 1);
+	SetFlag(I, 1);
+	write(0x0100 + stkptr, status);
+	stkptr--;
+
+	addr_abs = 0xFFFA;
+	uint16_t lo = read(addr_abs + 0);
+	uint16_t hi = read(addr_abs + 1);
+	pc = (hi << 8) | lo;
+
+	cycles = 8;
 }

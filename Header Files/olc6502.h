@@ -1,5 +1,7 @@
 #pragma once
 #include <cstdint>
+#include <vector>
+#include <iostream>
 
 class Bus;
 
@@ -29,7 +31,7 @@ public:
 	uint8_t pc = 0x0000; // Program Counter
 	uint8_t status = 0x00; // Status Register
 
-	void ConnectBus(Bus* n) { bus = n }
+	void ConnectBus(Bus* n) { bus = n };
 
 private:
 
