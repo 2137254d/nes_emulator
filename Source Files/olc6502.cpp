@@ -67,6 +67,11 @@ void olc6502::clock()
 	cycles--;
 }
 
+uint8_t olc6502::GetFlag(FLAG6502 f)
+{
+	return ((status & f) > 0) ? 1 : 0;
+}
+
 void olc6502::SetFlag(FLAG6502 f, bool v)
 {
 	if (v)
@@ -131,7 +136,6 @@ uint8_t olc6502::ABS()
 	return 0;
 }
 
-
 // Absolute adressing with X register offset
 uint8_t olc6502::ABX()
 {
@@ -149,6 +153,22 @@ uint8_t olc6502::ABX()
 		return 0;
 }
 
+// Absolute adressing with Y register offset
+uint8_t olc6502::ABY()
+{
+	uint16_t lo = read(pc);
+	pc++;
+	uint16_t hi = read(pc);
+	pc++;
+
+	addr_abs = (hi << 8) | lo;
+	addr_abs += y;
+
+	if ((addr_abs & 0xFF00) != (hi << 8))
+		return 1;
+	else
+		return 0;
+}
 // Emulating a bug in the hardware, if the low byte of the
 // supplied address is 0xF, then to read the high byte of 
 // the actual address we need to cross a page boundry.
