@@ -67,6 +67,11 @@ void olc6502::clock()
 	cycles--;
 }
 
+uint8_t olc6502::GetFlag(FLAG6502 f)
+{
+	return ((status & f) > 0) ? 1 : 0;
+}
+
 void olc6502::SetFlag(FLAG6502 f, bool v)
 {
 	if (v)
@@ -131,7 +136,6 @@ uint8_t olc6502::ABS()
 	return 0;
 }
 
-
 // Absolute adressing with X register offset
 uint8_t olc6502::ABX()
 {
@@ -149,6 +153,22 @@ uint8_t olc6502::ABX()
 		return 0;
 }
 
+// Absolute adressing with Y register offset
+uint8_t olc6502::ABY()
+{
+	uint16_t lo = read(pc);
+	pc++;
+	uint16_t hi = read(pc);
+	pc++;
+
+	addr_abs = (hi << 8) | lo;
+	addr_abs += y;
+
+	if ((addr_abs & 0xFF00) != (hi << 8))
+		return 1;
+	else
+		return 0;
+}
 // Emulating a bug in the hardware, if the low byte of the
 // supplied address is 0xF, then to read the high byte of 
 // the actual address we need to cross a page boundry.
@@ -362,6 +382,39 @@ uint8_t olc6502::BVS()
 	return 0;
 }
 
+uint8_t olc6502::BIT()
+{
+	fetch();
+	temp = a & fetched;
+	SetFlag(Z, (temp & 0x00FF) == 0x00);
+	SetFlag(N, fetched & (1 << 7));
+	SetFlag(V, fetched & (1 << 6));
+}
+
+// Break
+uint8_t olc6502::BRK()
+{
+	pc ++;
+
+	SetFlag(I,1);
+	write(0x01000 + stkptr, (pc >> 8) & 0x00FF);
+	stkptr--;
+	write(0x0100 + stkptr, pc & 0x00FF);
+	stkptr--;
+
+	SetFlag(B, 1);
+	write(0x0100 + stkptr, status);
+	stkptr--;
+
+	SetFlag(B, 1);
+	write(0x0100 + stkptr, status);
+	stkptr--;
+	SetFlag(B,0);
+
+	pc = (uint16_t)read(0xFFFE) | ((uint16_t)read(0xFFFF) << 8);
+	return 0;
+}
+
 // Clear the carry bit
 uint8_t olc6502::CLC()
 {
@@ -372,6 +425,70 @@ uint8_t olc6502::CLC()
 uint8_t olc6502::CLD()
 {
 	SetFlag(D, false);
+	return 0;
+}
+
+// Disable Interupts / Clear Interrupt Flag
+uint8_t olc6502::CLI()
+{
+	SetFlag(I, false);
+	return 0;
+}
+
+// Clear Overflow Flag
+uint8_t olc6502::CLV()
+{
+	SetFlag(V, false);
+}
+
+// Compare Accumulator 
+uint8_t olc6502::CMP()
+{
+	fetch();
+	temp = (uint16_t)a - (uint16_t)fetched;
+	SetFlag(C, a >= fetched);
+	SetFlag(Z, (temp & 0x00FF) == 0x0000);
+	SetFlag(N, temp & 0x0080);
+	return 1;
+}
+
+// Compare X Register
+uint8_t olc6502::CPX()
+{
+	fetch();
+	temp = (uint16_t)x - (uint16_t)fetched;
+	SetFlag(C, x >= fetched);
+	SetFlag(Z, (temp & 0x00FF) == 0x0000);
+	SetFlag(N, temp & 0x0080);
+	return 0;
+}
+
+// Decrement X Register
+uint8_t olc6502::DEX()
+{
+	x--;
+	SetFlag(Z, x == 0x00);
+	SetFlag(N, x & 0x80);
+	return 0;
+}
+
+// Decrement Y register
+uint8_t olc6502::DEY()
+{
+	y--;
+	SetFlag(Z, y == 0);
+	SetFlag(N, y & 0x80);
+	return 0;
+}
+
+// Compare Y register
+uint8_t olc6502::CPY()
+{
+	fetch();
+	temp = (uint16_t)y - (uint16_t)fetched;
+	SetFlag(C, y >= fetched);
+	SetFlag(Z, (temp & 0x00FF) == 0x0000);
+	SetFlag(N, temp & 0x0080);
 	return 0;
 }
 
@@ -418,6 +535,21 @@ uint8_t olc6502::PLA()
 	a = read(0x0100 + stkptr);
 	SetFlag(Z, a == 0x00);
 	SetFlag(N, a & 0x80);
+	return 0;
+}
+
+// Arithmetic Shift Left
+uint8_t olc6502::ASL()
+{
+	fetch();
+	temp = (uint16_t)fetched << 1;
+	SetFlag(C, (temp & 0xFF00) > 0);
+	SetFlag(Z, (temp & 0x00FF) == 0x00);
+	SetFlag(N, temp & 0x80);
+	if (lookup[opcode].addrmode == &olc6502::IMP)
+		a = temp & 0x00FF;
+	else
+		write(addr_abs, temp & 0x00FF);
 	return 0;
 }
 

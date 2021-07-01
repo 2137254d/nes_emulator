@@ -23,6 +23,14 @@ public:
 		V = (1 << 6),    // Overflow
 		N = (1 << 7),    // Negative
 	};
+	// interupt signals
+	void clock();
+	void reset();
+	void irq();
+	void nmi(); 
+
+	// Indicates the current instruction is complete by returning true
+	bool complete();
 
 	uint8_t a = 0x00; // Accumulator Register
 	uint8_t x = 0x00; // X register
@@ -33,6 +41,8 @@ public:
 
 	void ConnectBus(Bus* n) { bus = n ;}
 
+	std::map<uint16_t, std::string> disassemble(uint16_t nStart, uint16_t nStop);
+
 
 private:
 
@@ -40,25 +50,21 @@ private:
 	// unofficial opcode catcher
 	uint8_t XXX();
 
-	// interupt signals
-	void clock();
-	void reset();
-	void irq();
-	void nmi(); 
 
-	uint8_t  fetched 		= 0x00;
-	uint8_t  temp 			= 0x0000;
-	uint16_t addr_abs 		= 0x0000;
-	uint16_t addr_rel 		= 0x00;
-	uint8_t  opcode			= 0x00;
-	uint8_t  cycles			= 0;
-	uint32_t clock_count 	= 0;
+	uint8_t  fetched 		= 0x00; // Represents the working input value for the ALU
+	uint8_t  temp 			= 0x0000; // A convernience variable used everywhere
+	uint16_t addr_abs 		= 0x0000; // All used memory addresses end up in here
+	uint16_t addr_rel 		= 0x00; // Represents absolute address following a branch
+	uint8_t  opcode			= 0x00; // Is the instruction rype
+	uint8_t  cycles			= 0; // Counts how many cycles the instruction has remaining
+	uint32_t clock_count 	= 0; // A global accumulation of the number of clocks
 
 	// Linkage to the communication bus
 	Bus* bus = nullptr;
 	uint8_t read(uint16_t a);
 	void	write(uint16_t a, uint8_t d);
 
+	// Grabs the read location of data deppeing on address mode of the instruction byte
 	uint8_t fetch();
 
 	struct INSTRUCTION
@@ -101,6 +107,7 @@ private:
 
 private:
 
+	// Convenince functions to acess the status register
 	uint8_t GetFlag(FLAG6502 f);
 	void	SetFlag(FLAG6502 f, bool v);
 
