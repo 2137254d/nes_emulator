@@ -481,6 +481,75 @@ uint8_t olc6502::DEY()
 	return 0;
 }
 
+// Bitwaise logic XOR
+uint8_t olc6502::EOR()
+{
+	fetch();
+	a = a ^ fetched;
+	SetFlag(Z, a == 0x00);
+	SetFlag(N, a & 0x80);
+	return 1;
+}
+
+// Increment Value at Memory Location
+uint8_t olc6502::INC()
+{
+	fetch();
+	temp = fetched + 1;
+	write(addr_abs, temp & 0x00FF);
+	SetFlag(Z, (temp & 0x00FF) == 0x0000);
+	SetFlag(N, temp & 0x00080);
+	return 0;
+}
+
+// Increment X Register
+uint8_t olc6502::INX()
+{
+	x++;
+	SetFlag(Z, x == 0x00);
+	SetFlag(N, x & 0x80);
+	return 0;
+}
+
+// Increment X Register
+uint8_t olc6502::INY()
+{
+	x++;
+	SetFlag(Z, x == 0x00);
+	SetFlag(N, x & 0x80);
+}
+
+// Jump to Location
+uint8_t olc6502::JMP()
+{
+	pc = addr_abs;
+	return 0;
+}
+
+// Jump to Sub-Routine
+uint8_t olc6502::JSR()
+{
+	pc --;
+
+	write(0x0100 + stkptr, (pc >> 8) & 0x00FF);
+	stkptr--;
+	write(0x0100 + stkptr, pc & 0x00FF);
+	stkptr--;
+
+	pc = addr_abs;
+	return 0;
+}
+
+// Load the Accumulator 
+uint8_t olc6502::LDA()
+{
+	fetch();
+	a = fetched;
+	SetFlag(Z, a == 0x00);
+	SetFlag(N, a & 0x80);
+	return 1;
+}
+
 // Compare Y register
 uint8_t olc6502::CPY()
 {
