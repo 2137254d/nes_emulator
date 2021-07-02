@@ -481,6 +481,145 @@ uint8_t olc6502::DEY()
 	return 0;
 }
 
+// Bitwaise logic XOR
+uint8_t olc6502::EOR()
+{
+	fetch();
+	a = a ^ fetched;
+	SetFlag(Z, a == 0x00);
+	SetFlag(N, a & 0x80);
+	return 1;
+}
+
+// Increment Value at Memory Location
+uint8_t olc6502::INC()
+{
+	fetch();
+	temp = fetched + 1;
+	write(addr_abs, temp & 0x00FF);
+	SetFlag(Z, (temp & 0x00FF) == 0x0000);
+	SetFlag(N, temp & 0x00080);
+	return 0;
+}
+
+// Increment X Register
+uint8_t olc6502::INX()
+{
+	x++;
+	SetFlag(Z, x == 0x00);
+	SetFlag(N, x & 0x80);
+	return 0;
+}
+
+// Increment X Register
+uint8_t olc6502::INY()
+{
+	x++;
+	SetFlag(Z, x == 0x00);
+	SetFlag(N, x & 0x80);
+}
+
+// Jump to Location
+uint8_t olc6502::JMP()
+{
+	pc = addr_abs;
+	return 0;
+}
+
+// Jump to Sub-Routine
+uint8_t olc6502::JSR()
+{
+	pc --;
+
+	write(0x0100 + stkptr, (pc >> 8) & 0x00FF);
+	stkptr--;
+	write(0x0100 + stkptr, pc & 0x00FF);
+	stkptr--;
+
+	pc = addr_abs;
+	return 0;
+}
+
+// Load the Accumulator 
+uint8_t olc6502::LDA()
+{
+	fetch();
+	a = fetched;
+	SetFlag(Z, a == 0x00);
+	SetFlag(N, a & 0x80);
+	return 1;
+}
+
+// Load X Register
+uint8_t olc6502::LDX()
+{
+	fetch();
+	x = fetched;
+	SetFlag(Z, x == 0x00);
+	SetFlag(N, x & 0x80);
+	return 1;
+}
+
+// Load the Y Register 
+uint8_t olc6502::LDY()
+{
+	fetch();
+	y = fetched;
+	SetFlag(Z, y == 0x00);
+	SetFlag(N, y & 0x80);
+	return 1;
+}
+
+uint8_t olc6502::LSR()
+{
+	fetch();
+	SetFlag(C, fetched & 0x0001);
+	temp = fetched >> 1;
+	SetFlag(Z, (temp & 0x00FF) == 0x0000);
+	SetFlag(N, temp & 0x0080);
+	if (lookup[opcode].addrmode == &olc6502::IMP)
+		a = temp & 0x00FF;
+	else
+		write(addr_abs, temp & 0x00FF);
+	return 0;
+}
+
+
+uint8_t olc6502::NOP()
+{
+	switch (opcode) {
+	case 0x1C:
+	case 0x3C:
+	case 0x5C:
+	case 0x7C:
+	case 0xDC:
+	case 0xFC:
+		return 1;
+		break;
+	}
+	return 0;
+}
+
+// Bitwise Logic OR
+uint8_t olc6502::ORA()
+{
+	fetch();
+	a = a | fetched;
+	SetFlag(Z, a == 0x00);
+	SetFlag(N, a & 0x80);
+	return 1;
+}
+
+// Push Status Register to Stack
+uint8_t olc6502::PHP()
+{
+	write(0x0100 + stkptr, status | B | U);
+	SetFlag(B, 0);
+	SetFlag(U, 0);
+	stkptr--;
+	return 0;
+}
+
 // Compare Y register
 uint8_t olc6502::CPY()
 {
