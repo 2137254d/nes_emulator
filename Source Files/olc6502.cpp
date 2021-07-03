@@ -567,7 +567,7 @@ uint8_t olc6502::ROL()
 	SetFlag(C, temp & 0xFF00);
 	SetFlag(Z, (temp & 0x00FF) == 0x0000);
 	SetFlag(N, temp & 0x0080);
-	if (lookup[opcode].addrmode == &ocl6502::IMP)
+	if (lookup[opcode].addrmode == &olc6502::IMP)
 		a = temp & 0x00FF;
 	else 
 		write(addr_abs, temp & 0x00FF);
@@ -755,7 +755,99 @@ uint8_t olc6502::RTS()
 	return;
 }
 
+// Set Carry Flag
+uint8_t olc6502::SEC()
+{
+	SetFlag(C, true);
+	return 0;
+}
 
+// Set decimal Flag
+uint8_t olc6502::SED()
+{
+	SetFlag(D, true);
+	return 0;
+}
+
+// Set Interrupt Flag / Enable Interupts
+uint8_t olc6502::SEI()
+{
+	SetFlag(I, true);
+	return 0;
+}
+
+// Store Accumulator at Address
+uint8_t olc6502::STA()
+{
+	write(addr_abs, a);
+	return 0;
+}
+
+// Register at Address
+uint8_t olc6502::STX()
+{
+	write(addr_abs, x);
+	return 0;
+}
+
+// Store Y Register at Address
+uint8_t olc6502::STY()
+{
+	write(addr_abs, y);
+	return 0;
+}
+
+// Transfer Accumulator to X register
+uint8_t olc6502::TAX()
+{
+	x = a;
+	SetFlag(Z, x == 0x00);
+	SetFlag(N, x & 0x80);
+	return 0;
+}
+
+// Transfer Accumulator to Y register
+uint8_t olc6502::TAY()
+{
+	y = a;
+	SetFlag(Z, y == 0x00);
+	SetFlag(N, y & 0x80);
+	return 0;
+}
+
+// Transfer Stack Pointer to X Register
+uint8_t olc6502::TSX()
+{
+	x = stkptr;
+	SetFlag(Z, x == 0x00);
+	SetFlag(N, x & 0x80);
+	return 0;
+}
+
+// Transfer X Register to Accumulator
+uint8_t olc6502::TXA()
+{
+	a = x;
+	SetFlag(Z, a == 0x00);
+	SetFlag(N, a & 0x80);
+	return 0;
+}
+
+//Transfer X Register to Stack Pointer
+uint8_t olc6502::TXS()
+{
+	stkptr = x;
+	return 0;
+}
+
+// Transfer Y Register to Accumulator
+uint8_t olc6502::TYA()
+{
+	a = y;
+	SetFlag(Z, a == 0x00);
+	SetFlag(N, a & 0x80);
+	return 0;
+}
 
 // Reset
 void olc6502::reset()
