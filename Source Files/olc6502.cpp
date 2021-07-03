@@ -560,6 +560,21 @@ uint8_t olc6502::LDX()
 	return 1;
 }
 
+uint8_t olc6502::ROL()
+{
+	fetch();
+	temp = (uint16_t)(fetched << 1) | GetFlag(C);
+	SetFlag(C, temp & 0xFF00);
+	SetFlag(Z, (temp & 0x00FF) == 0x0000);
+	SetFlag(N, temp & 0x0080);
+	if (lookup[opcode].addrmode == &ocl6502::IMP)
+		a = temp & 0x00FF;
+	else 
+		write(addr_abs, temp & 0x00FF);
+	return 0;
+}
+
+
 // Load the Y Register 
 uint8_t olc6502::LDY()
 {
@@ -617,6 +632,15 @@ uint8_t olc6502::PHP()
 	SetFlag(B, 0);
 	SetFlag(U, 0);
 	stkptr--;
+	return 0;
+}
+
+// Pop Stack Register of Stack
+uint8_t olc6502::PLP()
+{
+	stkptr++;
+	a = read(0x0100 + stkptr);
+	SetFlag(U, 1);
 	return 0;
 }
 
@@ -691,6 +715,46 @@ uint8_t olc6502::ASL()
 		write(addr_abs, temp & 0x00FF);
 	return 0;
 }
+
+uint8_t olc6502::ROR()
+{
+	fetch();
+	temp = (uint16_t)(GetFlag(C) << 7) | (fetched >> 1);
+	SetFlag(C, fetched & 0x01);
+	SetFlag(Z, (temp & 0x00FF) == 0x00);
+	SetFlag(N, temp & 0x0080);
+	if (lookup[opcode].addrmode == &olc6502::IMP)
+		a = temp & 0x00FF;
+	else 
+		write(addr_abs, temp & 0x00FF);
+	return 0;
+}
+
+uint8_t olc6502::RTI()
+{
+	stkptr++;
+	status = read(0x0100 + stkptr);
+	status &= ~B;
+	status &= ~U;
+
+	stkptr++;
+	pc = (uint16_t)read(0x0100 + stkptr);
+	stkptr;
+	pc |= (uint16_t)read(0x0100 + stkptr) << 8;
+	return 0;
+}
+
+uint8_t olc6502::RTS()
+{
+	stkptr++;
+	pc = (uint16_t)read(0x0100 + stkptr);
+	stkptr++;
+	pc |= (uint16_t)read(0x0100 + stkptr) << 8;
+
+	pc++;
+	return;
+}
+
 
 
 // Reset
