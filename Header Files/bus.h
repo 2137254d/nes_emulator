@@ -30,4 +30,9 @@ private:
 	// A count of how many clocks have passed 
 	uint32_t nSystemClockCounter = 0;
 
+public: // System Interface
+	void insertCartridge(const std::shared_ptr<Cartridge>& cartridge);
+	void reset();
+	void clock();
+
 };
