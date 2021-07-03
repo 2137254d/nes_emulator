@@ -1,4 +1,4 @@
-#include "bus.h"
+#include "Bus.h"
 
 Bus::Bus()
 {
@@ -35,4 +35,21 @@ uint8_t Bus::cpuRead(uint16_t addr, bool bReadOnly)
 		return ppu.cpuRead(addr & 0x0007, bReadOnly);
 	}
 	return 0x00;
+}
+
+void Bus::insertCartridge(const std::shared_ptr<Cartridge>& cartridge)
+{
+	this->cart = cartridge;
+	ppu.ConnectCartridge(Cartridge);
+}
+
+void Bus::reset()
+{
+	cpu.reset();
+	nSystemClockCounter = 0;
+}
+
+void Bus::clock()
+{
+
 }
