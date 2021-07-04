@@ -1,6 +1,6 @@
 #include "olc2C02.h"
 
-uint8_t cpuRead(uint16_t addr, bool rdonly = false)
+uint8_t olc2C02::cpuRead(uint16_t addr, bool rdonly = false)
 {
     uint8_t data = 0x00;
 
@@ -27,7 +27,7 @@ uint8_t cpuRead(uint16_t addr, bool rdonly = false)
     return data;
 }
 
-void cpuWrite(uint16_t addr, uint8_t data)
+void olc2C02::cpuWrite(uint16_t addr, uint8_t data)
 {
      switch (addr)
     {
@@ -51,7 +51,7 @@ void cpuWrite(uint16_t addr, uint8_t data)
 
 }
 
-uint8_t ppuRead(uint16_t addr, bool rdonly = false)
+uint8_t olc2C02::ppuRead(uint16_t addr, bool rdonly = false)
 {
     // Place Holders 
     uint8_t data = 0x00;
@@ -60,7 +60,12 @@ uint8_t ppuRead(uint16_t addr, bool rdonly = false)
     return data;
 }
 
-void ppuWrite(uint16_t addr, uint8_t data)
+void olc2C02::ppuWrite(uint16_t addr, uint8_t data)
 {
     addr &= 0x3FFF;
+}
+
+void olc2C02::ConnectCartidge(const std::shared_ptr<Cartridge>& cartridge)
+{
+    this->cart = cartridge;
 }

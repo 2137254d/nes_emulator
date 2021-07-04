@@ -1,21 +1,84 @@
 #include "Cartridge.h"
 
-uint8_t cpuRead(uint16_t addr, bool rdonly = false)
+Cartridge::Cartridge(const std::string& sFileName)
+{
+
+
+    // iNES Format Header
+    struct sHeader
+    {
+        char name[4];
+        uint8_t prg_rom_chunks;
+        uint8_t chr_rom_chunks;
+        uint8_t mapper1;
+        uint8_t mapper2;
+        uint8_t prg_ram_size;
+        uint8_t tv_system1;
+        uint8_t tv_system2;
+        char unused[5];
+    } header;
+
+    std::ifstream ifs;
+    ifs.open(sFileName, std::ifstream::binary);
+    {
+        //Read file header
+        ifs.read((char*)&header, sizeof(sHeader));
+
+        if (header.mapper1 & 0x04)
+            ifs.seekg(512, std::ios_base::cur);
+
+        // Determine Mapper ID
+        nMapperID = ((header.mapper2 >> 4) << 4) | (header.mapper1 >> 4);   
+
+        // Discover File Format
+        uint8_t nFileType = 1;
+
+        if (nFileType == 0)
+        {
+
+        } 
+
+        if (nFileType == 1)
+        {
+            nPRGBanks = header.prg_rom_chunks;
+            vPRGMemory.resize(nPRGBanks * 16384);
+            ifs.read((char*)vPRGMemory.data(), vPRGMemory.size());
+
+            nCHRBanks = header.chr_rom_chunks;
+            vCHRMemory.resize(nCHRBanks * 8192);
+            ifs.read((char*)vCHRMemory,data(), vCHRMemory.size());
+        }
+
+        if (nFileType == 2)
+        {
+
+        }
+
+        ifs.close();
+    }
+}
+
+Cartridge::~Cartridge()
 {
 
 }
 
-void cpuWrite(uint16_t addr, uint8_t data)
+uint8_t Cartridge::cpuRead(uint16_t addr, bool rdonly = false)
 {
-
+    return false;
 }
 
-uint8_t ppuRead(uint16_t addr, bool rdonly = false)
+void Cartridge::cpuWrite(uint16_t addr, uint8_t data)
 {
-
+    return false;
 }
 
-void ppuWrite(uint16_t addr, uint8_t data)
+uint8_t Cartridge::ppuRead(uint16_t addr, bool rdonly = false)
 {
+    return false;
+}
 
+void Cartridge::ppuWrite(uint16_t addr, uint8_t data)
+{
+    return false;
 }
