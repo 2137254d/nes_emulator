@@ -69,6 +69,11 @@ Cartridge::~Cartridge()
 
 }
 
+bool Cartridge::ImageValid()]
+{
+    return bImageValid;
+}
+
 bool Cartridge::cpuRead(uint16_t addr, uint8_t & data)
 {
     uint32_t mapped_addr = 0;
