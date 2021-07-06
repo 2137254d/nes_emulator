@@ -69,7 +69,7 @@ Cartridge::~Cartridge()
 
 }
 
-bool Cartridge::ImageValid()]
+bool Cartridge::ImageValid()
 {
     return bImageValid;
 }
