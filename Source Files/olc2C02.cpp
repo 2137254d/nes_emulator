@@ -75,6 +75,21 @@ olc2C02::~olc2C02()
 {
 }
 
+olc::Sprite& olc2C02::GetScreen()
+{
+    return sprScreen;
+}
+
+olcSprite & olc2C02::GetNameTable(uint8_t i)
+{
+    return sprNameTable[i];
+}
+
+olc::Sprite & olc2C02::GetPatternTable(uint8_t i)
+{
+    return sprPatternTabl[i];
+}
+
 uint8_t olc2C02::cpuRead(uint16_t addr, bool rdonly = false)
 {
     uint8_t data = 0x00;
@@ -153,4 +168,22 @@ void olc2C02::ppuWrite(uint16_t addr, uint8_t data)
 void olc2C02::ConnectCartridge(const std::shared_ptr<Cartridge>& cartridge)
 {
     this->cart = cartridge;
+}
+
+void olc2C02::clock()
+{
+    sprScreen.SetPixel(cycle -1, scanline, palScreen[(rand() % 2) ? 0x3F : 0x30]);
+
+    // Advance renderer
+    cycle++;
+    if (cycle >= 341)
+    {
+        cycle =0;
+        scanline++;
+        if (scanline >= 261)
+        {
+            scanline = -1;
+            frame_complete = true;
+        }
+    }
 }
