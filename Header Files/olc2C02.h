@@ -3,7 +3,7 @@
 #include <memory>
 #include "Cartridge.h"
 
-#include "olcPixelGameEngine.h"
+#include "E:\Workspace\Libraries\olcPixelGameEngine\olcPixelGameEngine.h"
 class olc2C02
 {
 public:
