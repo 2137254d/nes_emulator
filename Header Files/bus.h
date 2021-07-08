@@ -21,6 +21,8 @@ public: // Devices on bus
 	std::shared_ptr<Cartridge> cart;
 	// 2KB of RAM
 	std::array<uint8_t, 2048> cpuRam; 
+	// Controllers 
+	uint8_t controller[2];
 
 public: // Bus read and write 
 	void cpuWrite(uint16_t addr, uint8_t data);
@@ -29,6 +31,8 @@ public: // Bus read and write
 private:
 	// A count of how many clocks have passed 
 	uint32_t nSystemClockCounter = 0;
+	// internal cache of controller state
+	uint8_t contoroller_state[2];
 
 public: // System Interface
 	void insertCartridge(const std::shared_ptr<Cartridge>& cartridge);
