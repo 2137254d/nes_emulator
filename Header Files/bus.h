@@ -31,10 +31,11 @@ public: // Bus read and write
 private:
 	// A count of how many clocks have passed 
 	uint32_t nSystemClockCounter = 0;
-	// internal cache of controller state
-	uint8_t contoroller_state[2];
+	// Internal cache of controller state
+	uint8_t controller_state[2];
 
 public: // System Interface
+	// Connects a cartridge object to the internal buses
 	void insertCartridge(const std::shared_ptr<Cartridge>& cartridge);
 	void reset();
 	void clock();
