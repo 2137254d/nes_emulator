@@ -8,6 +8,11 @@ Mapper_000::~Mapper_000()
 {
 }
 
+void Mapper_000::reset()
+{
+
+}
+
 bool Mapper_000::cpuMapRead(uint16_t addr, uint32_t &mapped_addr) 
 {
     if (addr >= 0x8000 && addr <= 0xFFFF)

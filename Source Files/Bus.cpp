@@ -27,13 +27,18 @@ void Bus::cpuWrite(uint16_t addr, uint8_t data)
 	{
 		ppu.cpuWrite(addr & 0x0007, data);
 	}
+	else if (addr >= 0x4016 && addr <= 0x4017)
+	{
+		controller_state[addr & 0x0001] = controller[addr & 0x0001];
+	}
 }
 
 uint8_t Bus::cpuRead(uint16_t addr, bool bReadOnly)
 { 
-	if (cart->cpuRead(addr, bReadOnly))
+	uint8_t data = 0x00;
+	if (cart->cpuRead(addr, data))
 	{
-		
+		// Cartridge address range
 	}
 	else if (addr >= 0x0000 && addr <= 0x1FFF) {
 		return cpuRam[addr & 0x07FF];
@@ -42,22 +47,43 @@ uint8_t Bus::cpuRead(uint16_t addr, bool bReadOnly)
 	{
 		return ppu.cpuRead(addr & 0x0007, bReadOnly);
 	}
-	return 0x00;
+	else if ( addr >= 0x4016 && addr <= 0x4017)
+	{
+		data = (controller_state[addr & 0x0001] & 0x80) > 0;
+		controller_state[addr & 0x0001] <<= 1;
+	}
+	return data;
 }
 
 void Bus::insertCartridge(const std::shared_ptr<Cartridge>& cartridge)
 {
+	// Connects cartridge to both Main Bus and CPU Bus
 	this->cart = cartridge;
 	ppu.ConnectCartridge(cartridge);
 }
 
 void Bus::reset()
 {
+	cart->reset();
 	cpu.reset();
+	ppu.reset();
 	nSystemClockCounter = 0;
 }
 
 void Bus::clock()
 {
+	ppu.clock();
+	if (nSystemClockCounter % 3 == 0)
+	{
+		cpu.clock();
+	}
 
+	if (ppu.nmi)
+	{
+		ppu.nmi = false;
+		cpu.nmi();
+	}
+
+
+	nSystemClockCounter++;
 }
