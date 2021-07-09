@@ -174,13 +174,30 @@ void olc2C02::cpuWrite(uint16_t addr, uint8_t data)
 
 uint8_t olc2C02::ppuRead(uint16_t addr, bool rdonly = false)
 {
-    // Place Holders 
+
     uint8_t data = 0x00;
     addr &= 0x3FFF; 
 
     if (cart->ppuRead(addr, data))
 	{
 		
+	}
+	else if (addr >= 0x0000 && addr <= 0x1FFF)
+	{
+		data = tblPattern[(addr & 0x1000) >> 12][addr & 0x0FFF];
+	}
+	else if (addr >= 0x2000 && addr <= 0x3EFF)
+	{
+
+	}
+	else if (addr >= 0x3F00 && addr <= 0x3FFF)
+	{
+		addr &= 0x001F;
+		if (addr == 0x0010) addr = 0x0000;
+		if (addr == 0x0014) addr = 0x0004;
+		if (addr == 0x0018) addr = 0x0008;
+		if (addr == 0x001C) addr = 0x000C;
+		data = tblPalette[addr];
 	}
 
     return data;
@@ -194,6 +211,24 @@ void olc2C02::ppuWrite(uint16_t addr, uint8_t data)
 	{
 		
 	}
+	else if (addr >= 0x0000 && addr <= 0x1FFF)
+	{
+		 tblPattern[(addr & 0x1000) >> 12][addr & 0x0FFF] = data;
+	}
+	else if (addr >= 0x2000 && addr <= 0x3EFF)
+	{
+
+	}
+	else if (addr >= 0x3F00 && addr <= 0x3FFF)
+	{
+		addr &= 0x001F;
+		if (addr == 0x0010) addr = 0x0000;
+		if (addr == 0x0014) addr = 0x0004;
+		if (addr == 0x0018) addr = 0x0008;
+		if (addr == 0x001C) addr = 0x000C;
+		tblPalette[addr] = data;
+	}
+
 }
 
 void olc2C02::ConnectCartridge(const std::shared_ptr<Cartridge>& cartridge)
