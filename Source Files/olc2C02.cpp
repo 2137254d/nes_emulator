@@ -80,14 +80,45 @@ olc::Sprite& olc2C02::GetScreen()
     return sprScreen;
 }
 
-olcSprite & olc2C02::GetNameTable(uint8_t i)
+olc::Sprite& olc2C02::GetNameTable(uint8_t i)
 {
     return sprNameTable[i];
 }
 
 olc::Sprite & olc2C02::GetPatternTable(uint8_t i)
+{	
+	for (uint16_t nTileY = 0; nTileY < 16; nTileY++)
+	{
+		for (uint16_t nTileX = 0; nTileX < 16; nTileX++)
+		{
+			uint16_t nOffset = nTileY * 256 + nTileX * 16;
+
+			for (uint16_t row = 0; row < 8; row ++)
+			{
+				uint8_t tile_lsb = ppuRead(i * 0x1000 + nOffset + row + 0);
+				uint8_t tile_msb = ppuRead(i * 0x1000 + nOffset + row + 8);
+
+				for (uint16_t col = 0; col < 8; col ++)
+				{
+					uint8_t pixel = (tile_lsb & 0x01) + (tile_msb & 0x01);
+					tile_lsb >>= 1; tile_msb >>= 1;
+
+					sprPatternTable[i].SetPixel
+					(
+						nTileX * 8 + (7- col),
+						nTileY * 8 + row,
+						GetColourFromPaletteRam(palette, pixel)
+					);
+				}
+			}
+		}
+	}
+    return sprPatternTable[i];
+}
+
+olc::Pixel& olc2C02::GetColourFromPaletteRam(uint8_t palette, uint8_t pixel)
 {
-    return sprPatternTabl[i];
+	return palScreen[ppuRead(0x3F00 + (palette << 2) + pixel)];
 }
 
 uint8_t olc2C02::cpuRead(uint16_t addr, bool rdonly = false)
@@ -147,7 +178,7 @@ uint8_t olc2C02::ppuRead(uint16_t addr, bool rdonly = false)
     uint8_t data = 0x00;
     addr &= 0x3FFF; 
 
-    if (cart->ppuRead(addr, rdonly))
+    if (cart->ppuRead(addr, data))
 	{
 		
 	}
