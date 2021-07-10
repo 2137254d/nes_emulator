@@ -17,15 +17,15 @@ private:
 
 private:
     olc::Pixel palScreen[0x40];
-    olc::Sprtie sprScreen           = olc::Sprite(256, 240);
-    olc::Sprite sprNameTable[2]     = { olc::Sprite(256, 240), olcLLSprite(256, 240) };
+    olc::Sprite sprScreen           = olc::Sprite(256, 240);
+    olc::Sprite sprNameTable[2]     = { olc::Sprite(256, 240), olc::Sprite(256, 240) };
     olc::Sprite sprPatternTable[2]  = { olc::Sprite(128, 128), olc::Sprite(128, 128) };
 
 public:    
     // Debugging Utilities
     olc::Sprite& GetScreen();
     olc::Sprite& GetNameTable(uint8_t i);
-    olc::Sprite& GetPatternTable(uint8_t i);
+    olc::Sprite& GetPatternTable(uint8_t i, uint8_t palette);
     bool frame_complete = false;
 
 private: 
@@ -41,6 +41,7 @@ public:
     uint8_t  ppuRead(uint16_t addr, bool rdonly = false);
     void     ppuWrite(uint16_t addr, uint8_t data);
 
+    olc::Pixel& GetColourFromPaletteRam(uint8_t palette, uint8_t pixel);
 public:
     // Interface
     void ConnectCartridge(const std::shared_ptr<Cartridge>& cartridge);

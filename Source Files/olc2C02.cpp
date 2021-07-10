@@ -85,7 +85,7 @@ olc::Sprite& olc2C02::GetNameTable(uint8_t i)
     return sprNameTable[i];
 }
 
-olc::Sprite & olc2C02::GetPatternTable(uint8_t i)
+olc::Sprite & olc2C02::GetPatternTable(uint8_t i. uint8_t palette)
 {	
 	for (uint16_t nTileY = 0; nTileY < 16; nTileY++)
 	{
