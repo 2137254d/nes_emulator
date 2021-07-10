@@ -85,7 +85,7 @@ olc::Sprite& olc2C02::GetNameTable(uint8_t i)
     return sprNameTable[i];
 }
 
-olc::Sprite & olc2C02::GetPatternTable(uint8_t i. uint8_t palette)
+olc::Sprite & olc2C02::GetPatternTable(uint8_t i, uint8_t palette)
 {	
 	for (uint16_t nTileY = 0; nTileY < 16; nTileY++)
 	{
@@ -132,16 +132,25 @@ uint8_t olc2C02::cpuRead(uint16_t addr, bool rdonly = false)
     case 0x0001: // Mask
         break;
     case 0x0002: // Status
+		status.vertical_blank = 1;
+		data = (status.reg & 0xE0) | (ppu_data_buffer & 0x1F);
+		status.vertical_blank = 0;
+		address_latch = 0;
         break;
     case 0x0003: // OAM Address
         break;
-    case 0x0004: // Scroll
+    case 0x0004: // OAM Data
         break;
-    case 0x0005: // PPU Address
+    case 0x0005: // Scroll
         break;
     case 0x0006: // PPU Address
-        break;
+		break;
     case 0x0007: // PPU Data
+		data = ppu_data_buffer;
+		ppu_data_buffer = ppuRead(ppu_address);
+
+		if (ppu_address > 0x3f00) data = ppu_data_buffer;
+		ppu_address++;
         break;
     }
 
@@ -153,8 +162,10 @@ void olc2C02::cpuWrite(uint16_t addr, uint8_t data)
      switch (addr)
     {
     case 0x0000: // Control
+		control.reg;
         break;
     case 0x0001: // Mask
+		mask.reg;
         break;
     case 0x0002: // Status
         break;
@@ -165,8 +176,21 @@ void olc2C02::cpuWrite(uint16_t addr, uint8_t data)
     case 0x0005: // PPU Address
         break;
     case 0x0006: // PPU Address
+	    if (address_latch == 0)
+		{
+			ppu_address = (ppu_address & 0x00FF) | (data << 8);
+			address_latch = 1;
+		}
+		else
+		{
+			ppu_address = (ppu_address & 0xFF00) | data; 
+			address_latch = 0;
+		}
+
         break;
     case 0x0007: // PPU Data
+		ppuWrite(ppu_address,data);
+		ppu_address++;
         break;
     }
 
