@@ -206,13 +206,13 @@ void olc2C02::cpuWrite(uint16_t addr, uint8_t data)
 		if (address_latch == 0)
 		{
 			fine_x = data & 0x07;
-			tram_addr.course_x = data >> 3;
+			tram_addr.coarse_x = data >> 3;
 			address_latch = 1;
 		}
 		else
 		{
 			tram_addr.fine_y = data & 0x07;
-			tram_addr.course_y = data >> 3;
+			tram_addr.coarse_y = data >> 3;
 			address_latch = 0;
 		}
 
@@ -372,6 +372,65 @@ void olc2C02::reset()
 
 void olc2C02::clock()
 {
+
+	auto IncrementScrollX = [&]()
+	{
+		if (mask.render_background || mask.render_sprites)
+		{
+			if (vram_addr.coarse_x == 31)
+			{
+				vram_addr.coarse_x = 0;
+				vram_addr.nametable_x = ~vram_addr.nametable_x;
+			}
+			else
+			{
+				vram_addr.coarse_x++;
+			}
+		}
+	};
+
+	auto IncrementScrollY = [&]()
+	{
+		if (mask.render_background || mask.render_sprites)
+		{
+			if(vram_addr.fine_y < 7)
+			{
+				vram_addr.fine_y++;
+			}
+			else
+			{
+				vram_addr.fine_y = 0;
+
+				if (vram_addr.coarse_y == 29)
+				{
+					vram_addr.coarse_y = 0;
+					vram_addr.nametable_y = ~vram_addr.nametable_y;
+				}
+				else if (vram_addr.coarse_y == 31)
+				{
+					vram_addr.coarse_y = 0;
+
+				}
+				else
+				{
+					vram_addr.coarse_y++;
+				}
+			}
+		}
+	};
+
+	auto TransferAddressX = [&]()
+	{
+		if (mask.render_background || mask.render_sprites)
+		{
+			vram_addr.nametable_x = tram_addr.nametable_x;
+			vram_addr.coarse_x = tram_addr.coarse_x;
+		}
+	};
+
+
+
+
 	if ( scanline == -1 && cycle == 1)
 	{
 		status.vertical_blank = 0;

@@ -110,8 +110,8 @@ public:
         struct 
         {
             
-            uint16_t course_x : 5;
-            uint16_t course_y : 5;
+            uint16_t coarse_x : 5;
+            uint16_t coarse_y : 5;
             uint16_t nametable_x : 1;
             uint16_t nametable_y : 1;
             uint16_t fine_y : 3;
