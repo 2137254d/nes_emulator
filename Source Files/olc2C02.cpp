@@ -95,8 +95,8 @@ olc::Sprite & olc2C02::GetPatternTable(uint8_t i, uint8_t palette)
 
 			for (uint16_t row = 0; row < 8; row ++)
 			{
-				uint8_t tile_lsb = ppuRead(i * 0x1000 + nOffset + row + 0);
-				uint8_t tile_msb = ppuRead(i * 0x1000 + nOffset + row + 8);
+				uint8_t tile_lsb = ppuRead(i * 0x1000 + nOffset + row + 0x0000);
+				uint8_t tile_msb = ppuRead(i * 0x1000 + nOffset + row + 0x0008);
 
 				for (uint16_t col = 0; col < 8; col ++)
 				{
@@ -125,35 +125,62 @@ uint8_t olc2C02::cpuRead(uint16_t addr, bool rdonly = false)
 {
     uint8_t data = 0x00;
 
-    switch (addr)
-    {
-    case 0x0000: // Control
-        break;
-    case 0x0001: // Mask
-        break;
-    case 0x0002: // Status
-		status.vertical_blank = 1;
-		data = (status.reg & 0xE0) | (ppu_data_buffer & 0x1F);
-		status.vertical_blank = 0;
-		address_latch = 0;
-        break;
-    case 0x0003: // OAM Address
-        break;
-    case 0x0004: // OAM Data
-        break;
-    case 0x0005: // Scroll
-        break;
-    case 0x0006: // PPU Address
-		break;
-    case 0x0007: // PPU Data
-		data = ppu_data_buffer;
-		ppu_data_buffer = ppuRead(ppu_address);
+	if (rdonly)
+	{
+		switch (addr)
+		{
+		case 0x0000: // Control
+			data = control.reg;
+			break;
+		case 0x0001: // Mask
+			data = mask.reg;
+			break;
+		case 0x0002: // Status
+			data = status.reg;
+			break;
+		case 0x0003: // OAM Address
+			break;
+		case 0x0004: // OAM Data
+			break;
+		case 0x0005: // Scroll
+			break;
+		case 0x0006: // PPU Address
+			break;
+		case 0x0007: // PPU Data
+			break;
+		}
+	}
+	else
+	{
+		switch (addr)
+		{
+		case 0x0000: // Control
+			break;
+		case 0x0001: // Mask
+			break;
+		case 0x0002: // Status
+			status.vertical_blank = 1;
+			data = (status.reg & 0xE0) | (ppu_data_buffer & 0x1F);
+			status.vertical_blank = 0;
+			address_latch = 0;
+			break;
+		case 0x0003: // OAM Address
+			break;
+		case 0x0004: // OAM Data
+			break;
+		case 0x0005: // Scroll
+			break;
+		case 0x0006: // PPU Address
+			break;
+		case 0x0007: // PPU Data
+			data = ppu_data_buffer;
+			ppu_data_buffer = ppuRead(vram_addr.reg);
 
-		if (ppu_address > 0x3f00) data = ppu_data_buffer;
-		ppu_address++;
-        break;
-    }
-
+			if (ppu_address > 0x3f00) data = ppu_data_buffer;
+			vram_addr.reg += (control.increment_mode ? 32 : 1);
+			break;
+		}
+	}
     return data;
 }
 
@@ -163,34 +190,49 @@ void olc2C02::cpuWrite(uint16_t addr, uint8_t data)
     {
     case 0x0000: // Control
 		control.reg;
+		tram_addr.nametable_x = control.nametable_x;
+		tram_addr.nametable_y = control.nametable_y;
         break;
     case 0x0001: // Mask
-		mask.reg;
+		mask.reg = data;
         break;
     case 0x0002: // Status
         break;
     case 0x0003: // OAM Address
         break;
-    case 0x0004: // Scroll
+    case 0x0004: // OAM Data
         break;
-    case 0x0005: // PPU Address
-        break;
-    case 0x0006: // PPU Address
-	    if (address_latch == 0)
+    case 0x0005: // Scroll
+		if (address_latch == 0)
 		{
-			ppu_address = (ppu_address & 0x00FF) | (data << 8);
+			fine_x = data & 0x07;
+			tram_addr.course_x = data >> 3;
 			address_latch = 1;
 		}
 		else
 		{
-			ppu_address = (ppu_address & 0xFF00) | data; 
+			tram_addr.fine_y = data & 0x07;
+			tram_addr.course_y = data >> 3;
 			address_latch = 0;
 		}
 
         break;
+    case 0x0006: // PPU Address
+		if (address_latch == 0)
+		{
+			tram_addr.reg = (uint16_t)((data & 0x3F) << 8) | (tram_addr.reg & 0x00FF);
+			address_latch = 1;
+		}
+		else 
+		{
+			tram_addr.reg = (tram_addr.reg & 0xFF00) | data;
+			vram_addr = tram_addr;
+			address_latch = 0;
+		}
+        break;
     case 0x0007: // PPU Data
-		ppuWrite(ppu_address,data);
-		ppu_address++;
+		ppuWrite(vram_addr.reg,data);
+		vram_addr.reg += (control.increment_mode ? 32 : 1);
         break;
     }
 
