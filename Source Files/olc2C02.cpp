@@ -348,6 +348,28 @@ void olc2C02::ConnectCartridge(const std::shared_ptr<Cartridge>& cartridge)
     this->cart = cartridge;
 }
 
+void olc2C02::reset()
+{
+	fine_x = 0x00;
+	address_latch = 0x00;
+	ppu_data_buffer = 0x00;
+	scanline = 0;
+	cycle = 0;
+	bg_next_title_id = 0x00;
+	bg_next_title_attrib = 0x00;
+	bg_next_title_lsb = 0x00;
+	bg_next_title_msb = 0x00;
+	bg_shifter_attrib_lo = 0x0000;
+	bg_shifter_attrib_hi = 0x0000;
+	bg_shifter_pattern_lo = 0x0000;
+	bg_shifter_pattern_hi = 0x0000;
+	status.reg = 0x00;
+	mask.reg = 0x00;
+	vram_addr.reg = 0x00;
+	tram_addr.reg = 0x00;
+
+}
+
 void olc2C02::clock()
 {
 	if ( scanline == -1 && cycle == 1)
