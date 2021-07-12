@@ -435,8 +435,19 @@ void olc2C02::clock()
 
 		bg_shifter_attrib_lo = (bg_shifter_attrib_lo & 0xFF00) | ((bg_next_title_attrib & 0b01) ? 0xFF : 0x00);
 		bg_shifter_attrib_hi = (bg_shifter_attrib_hi & 0xFF00) | ((bg_next_title_attrib & 0b10) ? 0xFF : 0x00);
-	}
+	};
+	
+	auto UpdateShifters = [&]() 
+	{
+		if (mask.render_background)
+		{
+			bg_shifter_pattern_lo <<= 1;
+			bg_shifter_pattern_hi <<= 1;
 
+			bg_shifter_attrib_lo <<= 1;
+			bg_shifter_attrib_hi <<= 1;
+		}
+	};
 
 	if ( scanline == -1 && cycle == 1)
 	{
