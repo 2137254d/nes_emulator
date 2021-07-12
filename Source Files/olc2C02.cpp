@@ -449,6 +449,34 @@ void olc2C02::clock()
 		}
 	};
 
+	if (scanline >= -1 && scanline < 240)
+	{
+		if (scanline == 0 && cycle == 0)
+		{
+			cycle =1;
+		}
+
+		if (scanline == -1 && cycle == 1)
+		{
+			status.vertical_blank = 0;
+		}
+
+		if ((cycle >= 2 && cycle < 258) || (cycle >= 321 && cycle < 338))
+		{
+			UpdateShifters();
+
+			switch ((cycle -1) % 8)
+			{
+				case 0:
+				LoadBackgorundShifters();
+
+				bg_next_title_id = ppuRead(0x2000 | (vram_addr.reg & 0x0FFF));	
+
+				break;
+			}
+		}
+	}
+
 	if ( scanline == -1 && cycle == 1)
 	{
 		status.vertical_blank = 0;
