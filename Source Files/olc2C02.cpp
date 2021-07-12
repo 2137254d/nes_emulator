@@ -428,7 +428,14 @@ void olc2C02::clock()
 		}
 	};
 
+	auto LoadBackgorundShifters = [&]()
+	{
+		bg_shifter_pattern_lo = (bg_shifter_pattern_lo & 0xFF00) | bg_next_title_lsb;
+		bg_shifter_pattern_hi = (bg_shifter_pattern_hi & 0xFF00) | bg_next_title_msb;
 
+		bg_shifter_attrib_lo = (bg_shifter_attrib_lo & 0xFF00) | ((bg_next_title_attrib & 0b01) ? 0xFF : 0x00);
+		bg_shifter_attrib_hi = (bg_shifter_attrib_hi & 0xFF00) | ((bg_next_title_attrib & 0b10) ? 0xFF : 0x00);
+	}
 
 
 	if ( scanline == -1 && cycle == 1)
