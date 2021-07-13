@@ -490,7 +490,13 @@ void olc2C02::clock()
 												+ (vram_addr.fine_y) + 0);
 					break;
 				case 6: 
-					
+					bg_next_tile_msb = ppuRead((control.pattern_background << 12)
+													+ ((uint16_t)bg_next_tile_id << 4)
+													+ (vram_addr.fine_y) + 8);
+					break;
+				case 7:
+					IncrementScrollX();
+					break;
 
 			}
 		}
