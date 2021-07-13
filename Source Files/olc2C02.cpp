@@ -468,11 +468,25 @@ void olc2C02::clock()
 			switch ((cycle -1) % 8)
 			{
 				case 0:
-				LoadBackgorundShifters();
+					LoadBackgorundShifters();
 
-				bg_next_title_id = ppuRead(0x2000 | (vram_addr.reg & 0x0FFF));	
+					bg_next_title_id = ppuRead(0x2000 | (vram_addr.reg & 0x0FFF));	
 
-				break;
+					break;
+
+				case 2: 
+
+					bg_next_title_attrib = ppuRead(0x23C0 | (vram_addr.nametable_y << 11)
+															| (vram_addr.nametable_x << 10)
+															| ((vram_addr.coarse_y >> 2) << 3)
+															| (vram_addr.coarse_x >> 2));
+					if (vram_addr.coarse_y & 0x02) bg_next_title_attrib >>= 4;
+					if (vram_addr.coarse_x & 0x02) bg_next_title_attrib >>= 2;
+					bg_next_title_attrib &= 0x03;
+					break;
+				
+
+
 			}
 		}
 	}
