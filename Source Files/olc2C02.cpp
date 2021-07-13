@@ -355,10 +355,10 @@ void olc2C02::reset()
 	ppu_data_buffer = 0x00;
 	scanline = 0;
 	cycle = 0;
-	bg_next_title_id = 0x00;
-	bg_next_title_attrib = 0x00;
-	bg_next_title_lsb = 0x00;
-	bg_next_title_msb = 0x00;
+	bg_next_tile_id = 0x00;
+	bg_next_tile_attrib = 0x00;
+	bg_next_tile_lsb = 0x00;
+	bg_next_tile_msb = 0x00;
 	bg_shifter_attrib_lo = 0x0000;
 	bg_shifter_attrib_hi = 0x0000;
 	bg_shifter_pattern_lo = 0x0000;
@@ -430,11 +430,11 @@ void olc2C02::clock()
 
 	auto LoadBackgorundShifters = [&]()
 	{
-		bg_shifter_pattern_lo = (bg_shifter_pattern_lo & 0xFF00) | bg_next_title_lsb;
-		bg_shifter_pattern_hi = (bg_shifter_pattern_hi & 0xFF00) | bg_next_title_msb;
+		bg_shifter_pattern_lo = (bg_shifter_pattern_lo & 0xFF00) | bg_next_tile_lsb;
+		bg_shifter_pattern_hi = (bg_shifter_pattern_hi & 0xFF00) | bg_next_tile_msb;
 
-		bg_shifter_attrib_lo = (bg_shifter_attrib_lo & 0xFF00) | ((bg_next_title_attrib & 0b01) ? 0xFF : 0x00);
-		bg_shifter_attrib_hi = (bg_shifter_attrib_hi & 0xFF00) | ((bg_next_title_attrib & 0b10) ? 0xFF : 0x00);
+		bg_shifter_attrib_lo = (bg_shifter_attrib_lo & 0xFF00) | ((bg_next_tile_attrib & 0b01) ? 0xFF : 0x00);
+		bg_shifter_attrib_hi = (bg_shifter_attrib_hi & 0xFF00) | ((bg_next_tile_attrib & 0b10) ? 0xFF : 0x00);
 	};
 	
 	auto UpdateShifters = [&]() 
@@ -468,11 +468,36 @@ void olc2C02::clock()
 			switch ((cycle -1) % 8)
 			{
 				case 0:
-				LoadBackgorundShifters();
+					LoadBackgorundShifters();
 
-				bg_next_title_id = ppuRead(0x2000 | (vram_addr.reg & 0x0FFF));	
+					bg_next_tile_id = ppuRead(0x2000 | (vram_addr.reg & 0x0FFF));	
 
-				break;
+					break;
+
+				case 2: 
+
+					bg_next_tile_attrib = ppuRead(0x23C0 | (vram_addr.nametable_y << 11)
+															| (vram_addr.nametable_x << 10)
+															| ((vram_addr.coarse_y >> 2) << 3)
+															| (vram_addr.coarse_x >> 2));
+					if (vram_addr.coarse_y & 0x02) bg_next_tile_attrib >>= 4;
+					if (vram_addr.coarse_x & 0x02) bg_next_tile_attrib >>= 2;
+					bg_next_tile_attrib &= 0x03;
+					break;
+				case 4:
+					bg_next_tile_lsb = ppuRead((control.pattern_background << 12) 
+												+ ((uint16_t)bg_next_tile_id << 4)
+												+ (vram_addr.fine_y) + 0);
+					break;
+				case 6: 
+					bg_next_tile_msb = ppuRead((control.pattern_background << 12)
+													+ ((uint16_t)bg_next_tile_id << 4)
+													+ (vram_addr.fine_y) + 8);
+					break;
+				case 7:
+					IncrementScrollX();
+					break;
+
 			}
 		}
 	}
