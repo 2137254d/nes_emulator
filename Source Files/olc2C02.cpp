@@ -500,6 +500,27 @@ void olc2C02::clock()
 
 			}
 		}
+
+		if (cycle == 256)
+		{
+			IncrementScrollY();
+		}
+
+		if (cycle ==257)
+		{
+			LoadBackgorundShifters();
+			TransferAddressX();
+		}
+
+		if (cycle == 338 || cycle==340)
+		{
+			bg_next_tile_id = ppuRead(0x2000 | (vram_addr.reg & 0x0FFF));
+		}
+
+		if (scanline == -1 && cycle >= 280 && cycle < 305)
+		{
+			TransferAddressY();
+		}
 	}
 
 	if ( scanline == -1 && cycle == 1)
