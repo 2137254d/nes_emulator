@@ -428,6 +428,16 @@ void olc2C02::clock()
 		}
 	};
 
+	auto TransferAddressY = [&]()
+	{
+		if (mask.render_background || mask.render_sprites)
+		{
+			vram_addr.fine_y = tram_addr.fine_y;
+			vram_addr.nametable_y = tram_addr.nametable_y;
+			vram_addr.coarse_y = tram_addr.coarse_y;
+		}
+	};
+
 	auto LoadBackgorundShifters = [&]()
 	{
 		bg_shifter_pattern_lo = (bg_shifter_pattern_lo & 0xFF00) | bg_next_tile_lsb;
@@ -500,19 +510,63 @@ void olc2C02::clock()
 
 			}
 		}
+
+		if (cycle == 256)
+		{
+			IncrementScrollY();
+		}
+
+		if (cycle ==257)
+		{
+			LoadBackgorundShifters();
+			TransferAddressX();
+		}
+
+		if (cycle == 338 || cycle==340)
+		{
+			bg_next_tile_id = ppuRead(0x2000 | (vram_addr.reg & 0x0FFF));
+		}
+
+		if (scanline == -1 && cycle >= 280 && cycle < 305)
+		{
+			TransferAddressY();
+		}
 	}
 
-	if ( scanline == -1 && cycle == 1)
+	if (scanline ==240)
 	{
-		status.vertical_blank = 0;
+		// Post rendering scanline
 	}
 
-	if (scanline == 241 && cycle == 1)
+	if ( scanline >= 241 && scanline < 261)
 	{
-		status.vertical_blank = 1;
-		if (control.enable_nmi)
-			nmi = true;
+		if (scanline == 241 && cycle == 1)
+		{
+			status.vertical_blank = 1; // End of the frame so vertical blank flag
+
+			if (control.enable_nmi)
+				nmi = true;
+		}
 	}
+
+	uint8_t bg_pixel = 0x00; // The 2 bit pixel to be rendered 
+	uint8_t bg_palette = 0x00; // The 3 bit index of the palette the pixel indexes
+
+	if (mask.render_background)
+	{
+		uint16_t bit_mux = 0x8000 >> fine_x;
+
+		uint8_t p0_pixel = (bg_shifter_pattern_lo & bit_mux) > 0;
+		uint8_t p1_pixel = (bg_shifter_pattern_hi & bit_mux) > 0;
+
+		bg_pixel = ((p1_pixel) << 1) | p0_pixel;
+
+		uint8_t bg_pal0 = (bg_shifter_attrib_lo & bit_mux) > 0;
+		uint8_t bg_pal1 = (bg_shifter_attrib_hi & bit_mux) > 0;
+		bg_palette = (bg_pal1 << 1) | bg_pal0;
+	}
+
+	sprScreen.SetPixel(cycle -1, scanline, GetColourFromPaletteRam(bg_palette, bg_pixel));
 
 
     // sprScreen.SetPixel(cycle -1, scanline, palScreen[(rand() % 2) ? 0x3F : 0x30]);
