@@ -428,6 +428,16 @@ void olc2C02::clock()
 		}
 	};
 
+	auto TransferAddressY = [&]()
+	{
+		if (mask.render_background || mask.render_sprites)
+		{
+			vram_addr.fine_y = tram_addr.fine_y;
+			vram_addr.nametable_y = tram_addr.nametable_y;
+			vram_addr.coarse_y = tram_addr.coarse_y;
+		}
+	};
+
 	auto LoadBackgorundShifters = [&]()
 	{
 		bg_shifter_pattern_lo = (bg_shifter_pattern_lo & 0xFF00) | bg_next_tile_lsb;
