@@ -533,10 +533,23 @@ void olc2C02::clock()
 		}
 	}
 
-	if ( scanline == -1 && cycle == 1)
+	if (scanline ==240)
 	{
-		status.vertical_blank = 0;
+		// Post rendering scanline
 	}
+
+	if ( scanline >= 241 && scanline < 261)
+	{
+		if (scanline == 241 && cycle == 1)
+		{
+			status.vertical_blank = 1; // End of the frame so vertical blank flag
+
+			if (control.enable_nmi)
+				nmi = true;
+		}
+	}
+
+	
 
 	if (scanline == 241 && cycle == 1)
 	{
