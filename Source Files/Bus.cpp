@@ -86,7 +86,39 @@ void Bus::clock()
 	ppu.clock();
 	if (nSystemClockCounter % 3 == 0)
 	{
-		cpu.clock();
+		if (dma_transfer)
+		{
+			if (dma_dummy)
+			{
+				if (nSystemClockCounter % 2 == 1)
+				{
+					dma_dummy = false;
+				}
+			}
+			else
+			{
+				if (nSystemClockCounter % 2 == 0)
+				{
+					dma_data = cpuRead(dma_page << 8 | dma_addr);
+				}
+				else
+				{
+					ppu.pOAM[dma_addr] = dma_data;
+
+					dma_addr++;
+
+					if (dma_addr == 0x00)
+					{
+						dma_transfer = false;
+						dma_dummy = true;
+					}
+				}
+			}
+		}
+		else
+		{
+			cpu.clock();
+		}
 	}
 
 	if (ppu.nmi)
