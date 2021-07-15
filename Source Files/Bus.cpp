@@ -27,6 +27,12 @@ void Bus::cpuWrite(uint16_t addr, uint8_t data)
 	{
 		ppu.cpuWrite(addr & 0x0007, data);
 	}
+	else if (addr == 0x4014)
+	{
+		dma_page = data;
+		dma_addr = 0x00;
+		dma_transfer = true;
+	}
 	else if (addr >= 0x4016 && addr <= 0x4017)
 	{
 		controller_state[addr & 0x0001] = controller[addr & 0x0001];
@@ -68,6 +74,11 @@ void Bus::reset()
 	cpu.reset();
 	ppu.reset();
 	nSystemClockCounter = 0;
+	dma_page = 0x00;
+	dma_addr = 0x00;
+	dma_data = 0x00;
+	dma_dummy = true;
+	dma_transfer = false;
 }
 
 void Bus::clock()
