@@ -155,6 +155,13 @@ public:
 
     uint8_t oam_addr = 0x00; // Stores address when CPU communicates with OAM via PPU registers
 
-    
+    sObjectAttributeEntry spriteScanline[8];
+    uint8_t sprite_count;
+    uint8_t sprite_shifter_pattern_lo[8];
+    uint8_t sprite_shifter_pattern_hi[8];
+
+    // Sprite Zero Collision Flags
+    bool bSpriteZeroHitPossible = false;
+    bool bSpriteZeroHitBeingRendered = false;
 
 };
