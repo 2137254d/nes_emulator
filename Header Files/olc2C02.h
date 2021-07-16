@@ -26,11 +26,10 @@ public:
     olc::Sprite& GetScreen();
     olc::Sprite& GetNameTable(uint8_t i);
     olc::Sprite& GetPatternTable(uint8_t i, uint8_t palette);
-    bool frame_complete = false;
 
-private: 
-    int16_t scanline = 0;
-    int16_t cycle = 0;
+    olc::Pixel& GetColourFromPaletteRam(uint8_t palette, uint8_t pixel);
+
+    bool frame_complete = false;
 
 public:
     // Communications with Main Bus
@@ -143,4 +142,19 @@ public:
     uint16_t bg_shifter_pattern_hi = 0x0000;
     uint16_t bg_shifter_attrib_lo = 0x0000;
     uint16_t bg_shifter_attrib_hi = 0x0000;
+
+// OAM memory for the PPU
+// Store locations of the next fram to be drawn
+    struct sObjectAttributeEntry
+    {
+        uint8_t y; // Y position of the spirte 
+        uint8_t id; // ID of tile from pattern memory
+        uint8_t attribute; // Flags define how sprite should be rendered 
+        uint8_t x; // X position of sprite
+    } OAM[64];
+
+    uint8_t oam_addr = 0x00; // Stores address when CPU communicates with OAM via PPU registers
+
+    
+
 };
