@@ -48,11 +48,16 @@ bool Mapper_000::ppuMapRead(uint16_t addr, uint32_t &mapped_addr)
 
 bool Mapper_000::ppuMapWrite(uint16_t addr, uint32_t &mapped_addr) 
 {
-    /*if (addr >= 0x000 && addr <= 0x1FFF)
+    if (addr >= 0x000 && addr <= 0x1FFF)
     {
-        
+        if (nCHRBanks ==0)        
+        {
+
+            mapped_addr = addr;
+            return true;
+        }
         return true;
-    }*/
+    }
 
     return false; 
 }
