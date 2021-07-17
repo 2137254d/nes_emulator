@@ -370,6 +370,7 @@ void olc2C02::reset()
 	bg_shifter_pattern_hi = 0x0000;
 	status.reg = 0x00;
 	mask.reg = 0x00;
+	control.reg = 0x00;
 	vram_addr.reg = 0x00;
 	tram_addr.reg = 0x00;
 
