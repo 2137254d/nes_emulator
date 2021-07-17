@@ -121,6 +121,11 @@ olc::Pixel& olc2C02::GetColourFromPaletteRam(uint8_t palette, uint8_t pixel)
 	return palScreen[ppuRead(0x3F00 + (palette << 2) + pixel)];
 }
 
+olc::Sprite& olc2C02::GetNameTable(uint8_t i)
+{
+	return sprNameTable[i];
+}
+
 uint8_t olc2C02::cpuRead(uint16_t addr, bool rdonly = false)
 {
     uint8_t data = 0x00;
