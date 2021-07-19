@@ -291,7 +291,7 @@ uint8_t olc2C02::ppuRead(uint16_t addr, bool rdonly = false)
 		if (addr == 0x0014) addr = 0x0004;
 		if (addr == 0x0018) addr = 0x0008;
 		if (addr == 0x001C) addr = 0x000C;
-		data = tblPalette[addr];
+		data = tblPalette[addr] & (mask.grayscale ? 0x30 : 0x3F);
 	}
 
     return data;
@@ -311,6 +311,7 @@ void olc2C02::ppuWrite(uint16_t addr, uint8_t data)
 	}
 	else if (addr >= 0x2000 && addr <= 0x3EFF)
 	{
+		addr &= 0x0FFF;
 		if (cart->mirror == Cartridge::MIRROR::VERTICAL)
 		{
 			// Vertical
@@ -552,6 +553,20 @@ void olc2C02::clock()
 		if (scanline == -1 && cycle >= 280 && cycle < 305)
 		{
 			TransferAddressY();
+		}
+
+		// Foreground Rendering
+		if (cycle == 257 && scanline >= 0)
+		{
+			std::memset(spriteScanline, 0xFF, 8 * sizeof(sObjectAttributeEntry));
+
+			sprite_count = 0;
+
+			for (uint8_t i = 0; i < 8; i++)
+			{
+				sprite_shifter_pattern_lo[i] = 0;
+				sprite_shifter_pattern_hi[i] = 0;
+			}
 		}
 	}
 
