@@ -555,7 +555,19 @@ void olc2C02::clock()
 			TransferAddressY();
 		}
 
-		
+		// Foreground Rendering
+		if (cycle == 257 && scanline >= 0)
+		{
+			std::memset(spriteScanline, 0xFF, 8 * sizeof(sObjectAttributeEntry));
+
+			sprite_count = 0;
+
+			for (uint8_t i = 0; i < 8; i++)
+			{
+				sprite_shifter_pattern_lo[i] = 0;
+				sprite_shifter_pattern_hi[i] = 0;
+			}
+		}
 	}
 
 	if (scanline ==240)
