@@ -103,7 +103,7 @@ private:
     uint8_t ppu_data_buffer = 0x00;
     uint16_t ppu_address = 0x0000;
 
-public: 
+private: 
     union loopy_register
     {
         struct 
@@ -153,7 +153,6 @@ public:
         uint8_t x; // X position of sprite
     } OAM[64];
 
-    uint8_t oam_addr = 0x00; // Stores address when CPU communicates with OAM via PPU registers
 
     sObjectAttributeEntry spriteScanline[8];
     uint8_t sprite_count;
@@ -164,4 +163,8 @@ public:
     bool bSpriteZeroHitPossible = false;
     bool bSpriteZeroHitBeingRendered = false;
 
+public: 
+    uint8_t* pOAM = (uint8_t*)OAM;
+
+    uint8_t oam_addr = 0x00; // Stores address when CPU communicates with OAM via PPU registers
 };
