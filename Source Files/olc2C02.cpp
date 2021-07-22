@@ -100,7 +100,7 @@ olc::Sprite & olc2C02::GetPatternTable(uint8_t i, uint8_t palette)
 
 				for (uint16_t col = 0; col < 8; col ++)
 				{
-					uint8_t pixel = (tile_lsb & 0x01) + (tile_msb & 0x01);
+					uint8_t pixel = ((tile_lsb & 0x01) << 1 ) | (tile_msb & 0x01);
 					tile_lsb >>= 1; tile_msb >>= 1;
 
 					sprPatternTable[i].SetPixel
