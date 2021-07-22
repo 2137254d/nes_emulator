@@ -100,7 +100,7 @@ olc::Sprite & olc2C02::GetPatternTable(uint8_t i, uint8_t palette)
 
 				for (uint16_t col = 0; col < 8; col ++)
 				{
-					uint8_t pixel = (tile_lsb & 0x01) + (tile_msb & 0x01);
+					uint8_t pixel = ((tile_lsb & 0x01) << 1 ) | (tile_msb & 0x01);
 					tile_lsb >>= 1; tile_msb >>= 1;
 
 					sprPatternTable[i].SetPixel
@@ -565,6 +565,20 @@ void olc2C02::clock()
 			std::memset(spriteScanline, 0xFF, 8 * sizeof(sObjectAttributeEntry));
 
 			sprite_count = 0;
+
+			uint8_t nOAMEntry = 0;
+			while (nOAMEntry < 64 && sprite_count < 9)
+			{
+				int16_t diff = ((int16_t)scanline - (int16_t)OAM[nOAMEntry].y);
+				if (diff >= 0 && diff < (control.sprite_size ? 16 : 8 ))
+				{
+					if (sprite_count < 8)
+					{
+						memcpy(&spriteScanline[sprite_count], &OAM[nOAMEntry], sizeof(sObjectAttributeEntry));
+						sprite_count ++;
+					}
+				}
+			}
 
 			for (uint8_t i = 0; i < 8; i++)
 			{
