@@ -566,6 +566,20 @@ void olc2C02::clock()
 
 			sprite_count = 0;
 
+			uint8_t nOAMEntry = 0;
+			while (nOAMEntry < 64 && sprite_count < 9)
+			{
+				int16_t diff = ((int16_t)scanline - (int16_t)OAM[nOAMEntry].y);
+				if (diff >= 0 && diff < (control.sprite_size ? 16 : 8 ))
+				{
+					if (sprite_count < 8)
+					{
+						memcpy(&spriteScanline[sprite_count], &OAM[nOAMEntry], sizeof(sObjectAttributeEntry));
+						sprite_count ++;
+					}
+				}
+			}
+
 			for (uint8_t i = 0; i < 8; i++)
 			{
 				sprite_shifter_pattern_lo[i] = 0;
