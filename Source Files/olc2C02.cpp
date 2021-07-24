@@ -597,10 +597,37 @@ void olc2C02::clock()
 				uint8_t sprite_pattern_bits_lo, sprite_patter_bits_hi;
 				uint16_t sprite_pattern_addr_lo, sprite_pattern_addr_hi;
 
+				if (!control.sprite_size)
+				{
+					// 8x8 Sprite Mode - The control register determines the pattern table
+					if (!(spriteScanline[i].attribute & 0x80))
+					{
+						// Sprite is NOT flipped veritcally
+					}
+					else 
+					{
+						// Sprite IS flipped vertically
+					}
+				}
+				else 
+				{	
+					// 8x16 Sprite Mode - The sprite attribute determines the pattern table
+					if (!(spriteScanline[i].attribute & 0x80))
+					{
+						// Sprite is NOT flipped vertically
+
+					}
+					else
+					{
+						// Sprite IS flipped vertically
+					}
+
+				}
+
 			}
 		}
 
-		
+
 	}
 
 	if (scanline ==240)
