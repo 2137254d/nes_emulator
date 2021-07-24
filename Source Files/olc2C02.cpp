@@ -578,7 +578,10 @@ void olc2C02::clock()
 						sprite_count ++;
 					}
 				}
+				nOAMEntry++;
 			}
+
+			status.sprite_overflow = (sprite_count > 8);
 
 			for (uint8_t i = 0; i < 8; i++)
 			{
