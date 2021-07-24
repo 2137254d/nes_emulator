@@ -589,6 +589,18 @@ void olc2C02::clock()
 				sprite_shifter_pattern_hi[i] = 0;
 			}
 		}
+
+		if (cycle == 340)
+		{
+			for (uint8_t i = 0; i < sprite_count; i ++)
+			{
+				uint8_t sprite_pattern_bits_lo, sprite_patter_bits_hi;
+				uint16_t sprite_pattern_addr_lo, sprite_pattern_addr_hi;
+
+			}
+		}
+
+		
 	}
 
 	if (scanline ==240)
