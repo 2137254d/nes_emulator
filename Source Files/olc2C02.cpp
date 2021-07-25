@@ -644,6 +644,23 @@ void olc2C02::clock()
 					else
 					{
 						// Sprite IS flipped vertically
+						if (scanline - spriteScanline[i].y < 8)
+						{
+							// Reading top half of the tile
+							sprite_pattern_addr_lo = 
+								((spriteScanline[i].id & 0x01) << 12)
+								| ((spriteScanline[i].id & 0xFE) << 4)
+								| (7 -(scanline - spriteScanline[i].y) & 0x07);
+						
+						}
+						else
+						{
+							// Reading bottom half of the tile
+							sprite_pattern_addr_lo = 
+								((spriteScanline[i].id & 0x01) << 12)
+								| (((spriteScanline[i].id & 0xFE) + 1) << 4)
+								| (7 -(scanline - spriteScanline[i].y) & 0x07);
+						}
 					}
 
 				}
