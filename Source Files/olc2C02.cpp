@@ -603,10 +603,18 @@ void olc2C02::clock()
 					if (!(spriteScanline[i].attribute & 0x80))
 					{
 						// Sprite is NOT flipped veritcally
+						sprite_pattern_addr_lo = 
+							(control.pattern_sprite << 12)
+							| (spriteScanline[i].id << 4)
+							| (scanline - spriteScanline[i].y);
 					}
 					else 
 					{
 						// Sprite IS flipped vertically
+						sprite_pattern_addr_lo = 
+							(control.pattern_sprite << 12)
+							| (spriteScanline[i].id << 4)
+							| (7 -(scanline - spriteScanline[i].y));
 					}
 				}
 				else 
@@ -615,11 +623,44 @@ void olc2C02::clock()
 					if (!(spriteScanline[i].attribute & 0x80))
 					{
 						// Sprite is NOT flipped vertically
-
+						if (scanline - spriteScanline[i].y < 8)
+						{
+							// Reading top half of the tile
+							sprite_pattern_addr_lo = 
+								((spriteScanline[i].id & 0x01) << 12)
+								| ((spriteScanline[i].id & 0xFE) << 4)
+								| ((scanline - spriteScanline[i].y) & 0x07);
+						
+						}
+						else
+						{
+							// Reading bottom half of the tile
+							sprite_pattern_addr_lo = 
+								((spriteScanline[i].id & 0x01) << 12)
+								| (((spriteScanline[i].id & 0xFE) + 1) << 4)
+								| ((scanline - spriteScanline[i].y) & 0x07);
+						}
 					}
 					else
 					{
 						// Sprite IS flipped vertically
+						if (scanline - spriteScanline[i].y < 8)
+						{
+							// Reading top half of the tile
+							sprite_pattern_addr_lo = 
+								((spriteScanline[i].id & 0x01) << 12)
+								| ((spriteScanline[i].id & 0xFE) << 4)
+								| (7 -(scanline - spriteScanline[i].y) & 0x07);
+						
+						}
+						else
+						{
+							// Reading bottom half of the tile
+							sprite_pattern_addr_lo = 
+								((spriteScanline[i].id & 0x01) << 12)
+								| (((spriteScanline[i].id & 0xFE) + 1) << 4)
+								| (7 -(scanline - spriteScanline[i].y) & 0x07);
+						}
 					}
 
 				}
