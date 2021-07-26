@@ -726,6 +726,40 @@ void olc2C02::clock()
 		bg_palette = (bg_pal1 << 1) | bg_pal0;
 	}
 
+	// Foreground
+
+	uint8_t fg_pixel = 0x00; // The 2-bit pixel to be rendered 
+	uint8_t fg_palette = 0x00; // The 3-bit index of the palette the pixel indexes
+	uint8_t fg_priority = 0x00; // A bit of the sprite attribut idicates if its more important than the background
+
+	if (mask.render_sprites)
+	{
+		bSpriteZeroHitBeingRendered = false;
+
+		for (uint8_t i = 0; i < sprite_count; i++)
+		{
+			if (spriteScanline[i].x == 0)
+			{
+				uint8_t fg_pixel_lo = (sprite_shifter_pattern_lo[i] & 0x80) > 0;
+				uint8_t fg_pixel_hi = (sprite_shifter_pattern_hi[i] & 0x80) > 0;
+				fg_pixel = (fg_pixel_hi << 1) | fg_pixel_lo;
+
+				fg_palette = (spriteScanline[i].attribute & 0x03) + 0x04;
+				fg_priority = (spriteScanline[i].attribute & 0x20) == 0;
+
+				if (fg_pixel != 0)
+				{
+					if (i == 0)
+					{
+						bSpriteZeroHitBeingRendered = true;
+					}
+
+					break;
+				}
+			}
+		}
+	}
+
 	sprScreen.SetPixel(cycle -1, scanline, GetColourFromPaletteRam(bg_palette, bg_pixel));
 
 
