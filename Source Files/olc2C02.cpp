@@ -594,7 +594,7 @@ void olc2C02::clock()
 		{
 			for (uint8_t i = 0; i < sprite_count; i ++)
 			{
-				uint8_t sprite_pattern_bits_lo, sprite_patter_bits_hi;
+				uint8_t sprite_pattern_bits_lo, sprite_pattern_bits_hi;
 				uint16_t sprite_pattern_addr_lo, sprite_pattern_addr_hi;
 
 				if (!control.sprite_size)
@@ -649,7 +649,7 @@ void olc2C02::clock()
 							// Reading top half of the tile
 							sprite_pattern_addr_lo = 
 								((spriteScanline[i].id & 0x01) << 12)
-								| ((spriteScanline[i].id & 0xFE) << 4)
+								| (((spriteScanline[i].id & 0xFE) + 1) << 4)
 								| (7 -(scanline - spriteScanline[i].y) & 0x07);
 						
 						}
@@ -658,12 +658,34 @@ void olc2C02::clock()
 							// Reading bottom half of the tile
 							sprite_pattern_addr_lo = 
 								((spriteScanline[i].id & 0x01) << 12)
-								| (((spriteScanline[i].id & 0xFE) + 1) << 4)
+								| ((spriteScanline[i].id & 0xFE) << 4)
 								| (7 -(scanline - spriteScanline[i].y) & 0x07);
 						}
 					}
 
 				}
+
+				sprite_pattern_addr_hi = sprite_pattern_addr_lo + 8;
+
+				sprite_pattern_bits_lo = ppuRead(sprite_pattern_addr_lo);
+				sprite_pattern_bits_hi = ppuRead(sprite_pattern_addr_hi);
+
+				if (spriteScanline[i].attribute & 0x40)
+				{
+					auto flipbyte = [](uint8_t b)
+					{
+						b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+						b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+						b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+						return b;
+					};
+
+					sprite_pattern_bits_lo = flipbyte(sprite_pattern_bits_lo);
+					sprite_pattern_bits_hi = flipbyte(sprite_pattern_bits_hi);
+				}
+
+				sprite_shifter_pattern_lo[i] = sprite_pattern_bits_lo;
+				sprite_shifter_pattern_hi[i] = sprite_pattern_bits_hi;
 
 			}
 		}
@@ -702,6 +724,40 @@ void olc2C02::clock()
 		uint8_t bg_pal0 = (bg_shifter_attrib_lo & bit_mux) > 0;
 		uint8_t bg_pal1 = (bg_shifter_attrib_hi & bit_mux) > 0;
 		bg_palette = (bg_pal1 << 1) | bg_pal0;
+	}
+
+	// Foreground
+
+	uint8_t fg_pixel = 0x00; // The 2-bit pixel to be rendered 
+	uint8_t fg_palette = 0x00; // The 3-bit index of the palette the pixel indexes
+	uint8_t fg_priority = 0x00; // A bit of the sprite attribut idicates if its more important than the background
+
+	if (mask.render_sprites)
+	{
+		bSpriteZeroHitBeingRendered = false;
+
+		for (uint8_t i = 0; i < sprite_count; i++)
+		{
+			if (spriteScanline[i].x == 0)
+			{
+				uint8_t fg_pixel_lo = (sprite_shifter_pattern_lo[i] & 0x80) > 0;
+				uint8_t fg_pixel_hi = (sprite_shifter_pattern_hi[i] & 0x80) > 0;
+				fg_pixel = (fg_pixel_hi << 1) | fg_pixel_lo;
+
+				fg_palette = (spriteScanline[i].attribute & 0x03) + 0x04;
+				fg_priority = (spriteScanline[i].attribute & 0x20) == 0;
+
+				if (fg_pixel != 0)
+				{
+					if (i == 0)
+					{
+						bSpriteZeroHitBeingRendered = true;
+					}
+
+					break;
+				}
+			}
+		}
 	}
 
 	sprScreen.SetPixel(cycle -1, scanline, GetColourFromPaletteRam(bg_palette, bg_pixel));
