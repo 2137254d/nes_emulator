@@ -594,7 +594,7 @@ void olc2C02::clock()
 		{
 			for (uint8_t i = 0; i < sprite_count; i ++)
 			{
-				uint8_t sprite_pattern_bits_lo, sprite_patter_bits_hi;
+				uint8_t sprite_pattern_bits_lo, sprite_pattern_bits_hi;
 				uint16_t sprite_pattern_addr_lo, sprite_pattern_addr_hi;
 
 				if (!control.sprite_size)
@@ -649,7 +649,7 @@ void olc2C02::clock()
 							// Reading top half of the tile
 							sprite_pattern_addr_lo = 
 								((spriteScanline[i].id & 0x01) << 12)
-								| ((spriteScanline[i].id & 0xFE) << 4)
+								| (((spriteScanline[i].id & 0xFE) + 1) << 4)
 								| (7 -(scanline - spriteScanline[i].y) & 0x07);
 						
 						}
@@ -658,12 +658,34 @@ void olc2C02::clock()
 							// Reading bottom half of the tile
 							sprite_pattern_addr_lo = 
 								((spriteScanline[i].id & 0x01) << 12)
-								| (((spriteScanline[i].id & 0xFE) + 1) << 4)
+								| ((spriteScanline[i].id & 0xFE) << 4)
 								| (7 -(scanline - spriteScanline[i].y) & 0x07);
 						}
 					}
 
 				}
+
+				sprite_pattern_addr_hi = sprite_pattern_addr_lo + 8;
+
+				sprite_pattern_bits_lo = ppuRead(sprite_pattern_addr_lo);
+				sprite_pattern_bits_hi = ppuRead(sprite_pattern_addr_hi);
+
+				if (spriteScanline[i].attribute & 0x40)
+				{
+					auto flipbyte = [](uint8_t b)
+					{
+						b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+						b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+						b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+						return b;
+					};
+
+					sprite_pattern_bits_lo = flipbyte(sprite_pattern_bits_lo);
+					sprite_pattern_bits_hi = flipbyte(sprite_pattern_bits_hi);
+				}
+
+				sprite_shifter_pattern_lo[i] = sprite_pattern_bits_lo;
+				sprite_shifter_pattern_hi[i] = sprite_pattern_bits_hi;
 
 			}
 		}
