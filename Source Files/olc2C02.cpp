@@ -760,6 +760,25 @@ void olc2C02::clock()
 		}
 	}
 
+	uint8_t pixel = 0x00;
+	uint8_t palette = 0x00;
+
+	if (bg_pixel == 0 && fg_pixel == 0)
+	{
+		pixel = 0x00;
+		palette = 0x00;
+	}
+	else if (bg_pixel == 0 && fg_pixel > 0)
+	{
+		pixel = fg_pixel;
+		palette = fg_palette;
+	}
+	else if (bg_pixel > 0 && fg_pixel == 0)
+	{
+		pixel = bg_pixel;
+		palette = bg_palette;
+	}
+
 	sprScreen.SetPixel(cycle -1, scanline, GetColourFromPaletteRam(bg_palette, bg_pixel));
 
 
