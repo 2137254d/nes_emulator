@@ -760,6 +760,41 @@ void olc2C02::clock()
 		}
 	}
 
+	uint8_t pixel = 0x00;
+	uint8_t palette = 0x00;
+
+	if (bg_pixel == 0 && fg_pixel == 0)
+	{
+		pixel = 0x00;
+		palette = 0x00;
+	}
+	else if (bg_pixel == 0 && fg_pixel > 0)
+	{
+		pixel = fg_pixel;
+		palette = fg_palette;
+	}
+	else if (bg_pixel > 0 && fg_pixel == 0)
+	{
+		pixel = bg_pixel;
+		palette = bg_palette;
+	}
+
+
+	if (bSpriteZeroHitPossible && bSpriteZeroHitBeingRendered)
+	{
+		if (mask.render_background & mask.render_sprites)
+		{
+			if (~(mask.render_background_left | mask.render_sprites_left))
+			{
+				if(cycle >= 9 && cycle < 258)
+				{
+					status.sprite_zero_hit = 1;
+				}
+			}
+		}
+	}
+
+
 	sprScreen.SetPixel(cycle -1, scanline, GetColourFromPaletteRam(bg_palette, bg_pixel));
 
 
