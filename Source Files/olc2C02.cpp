@@ -779,6 +779,22 @@ void olc2C02::clock()
 		palette = bg_palette;
 	}
 
+
+	if (bSpriteZeroHitPossible && bSpriteZeroHitBeingRendered)
+	{
+		if (mask.render_background & mask.render_sprites)
+		{
+			if (~(mask.render_background_left | mask.render_sprites_left))
+			{
+				if(cycle >= 9 && cycle < 258)
+				{
+					status.sprite_zero_hit = 1;
+				}
+			}
+		}
+	}
+
+
 	sprScreen.SetPixel(cycle -1, scanline, GetColourFromPaletteRam(bg_palette, bg_pixel));
 
 
