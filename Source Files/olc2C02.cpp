@@ -803,6 +803,13 @@ void olc2C02::clock()
 						status.sprite_zero_hit = 1;
 					}
 				}
+				else 
+				{
+					if (cycle >= 1 && cycle < 258)
+					{
+						status.sprite_zero_hit = 1;
+					}
+				}
 			}
 		}
 	}
