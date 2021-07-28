@@ -778,22 +778,41 @@ void olc2C02::clock()
 		pixel = bg_pixel;
 		palette = bg_palette;
 	}
-
-
-	if (bSpriteZeroHitPossible && bSpriteZeroHitBeingRendered)
+	else if (bg_pixel > 0 && fg_pixel > 0)
 	{
-		if (mask.render_background & mask.render_sprites)
+		if (fg_priority)
 		{
-			if (~(mask.render_background_left | mask.render_sprites_left))
+			pixel = fg_pixel;
+			palette = fg_palette;
+		}
+		else
+		{
+			pixel = bg_pixel;
+			palette = bg_palette;
+		}
+	
+
+		if (bSpriteZeroHitPossible && bSpriteZeroHitBeingRendered)
+		{
+			if (mask.render_background & mask.render_sprites)
 			{
-				if(cycle >= 9 && cycle < 258)
+				if (~(mask.render_background_left | mask.render_sprites_left))
 				{
-					status.sprite_zero_hit = 1;
+					if(cycle >= 9 && cycle < 258)
+					{
+						status.sprite_zero_hit = 1;
+					}
+				}
+				else 
+				{
+					if (cycle >= 1 && cycle < 258)
+					{
+						status.sprite_zero_hit = 1;
+					}
 				}
 			}
 		}
 	}
-
 
 	sprScreen.SetPixel(cycle -1, scanline, GetColourFromPaletteRam(bg_palette, bg_pixel));
 
