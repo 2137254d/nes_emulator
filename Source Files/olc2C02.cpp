@@ -262,6 +262,8 @@ uint8_t olc2C02::ppuRead(uint16_t addr, bool rdonly = false)
 	}
 	else if (addr >= 0x2000 && addr <= 0x3EFF)
 	{
+		addr &= 0x0FFF;
+
 		if (cart->mirror == Cartridge::MIRROR::VERTICAL)
 		{
 			// Vertical
