@@ -144,7 +144,6 @@ uint8_t olc2C02::cpuRead(uint16_t addr, bool rdonly = false)
 			data = status.reg;
 			break;
 		case 0x0003: // OAM Address
-			data = oam_addr;
 			break;
 		case 0x0004: // OAM Data
 			break;
@@ -165,15 +164,15 @@ uint8_t olc2C02::cpuRead(uint16_t addr, bool rdonly = false)
 		case 0x0001: // Mask
 			break;
 		case 0x0002: // Status
-			status.vertical_blank = 1;
 			data = (status.reg & 0xE0) | (ppu_data_buffer & 0x1F);
 			status.vertical_blank = 0;
 			address_latch = 0;
 			break;
 		case 0x0003: // OAM Address
-			data = oam_addr;
+			
 			break;
 		case 0x0004: // OAM Data
+			data = pOAM[oam_addr];
 			break;
 		case 0x0005: // Scroll
 			break;
@@ -263,6 +262,8 @@ uint8_t olc2C02::ppuRead(uint16_t addr, bool rdonly = false)
 	}
 	else if (addr >= 0x2000 && addr <= 0x3EFF)
 	{
+		addr &= 0x0FFF;
+
 		if (cart->mirror == Cartridge::MIRROR::VERTICAL)
 		{
 			// Vertical
@@ -496,6 +497,16 @@ void olc2C02::clock()
 		if (scanline == -1 && cycle == 1)
 		{
 			status.vertical_blank = 0;
+
+			status.sprite_overflow = 0;
+
+			status.sprite_zero_hit = 0;
+
+			for (int i = 0; i < 8; i ++ )
+			{
+				sprite_shifter_pattern_lo[i] = 0;
+				sprite_shifter_pattern_hi[i] = 0;
+			}
 		}
 
 		if ((cycle >= 2 && cycle < 258) || (cycle >= 321 && cycle < 338))
@@ -566,7 +577,16 @@ void olc2C02::clock()
 
 			sprite_count = 0;
 
+			for (uint8_t i = 0; i < 8; i++)
+			{
+				sprite_shifter_pattern_lo[i] = 0;
+				sprite_shifter_pattern_hi[i] = 0;
+			}
+
 			uint8_t nOAMEntry = 0;
+
+			bSpriteZeroHitPossible = false;
+
 			while (nOAMEntry < 64 && sprite_count < 9)
 			{
 				int16_t diff = ((int16_t)scanline - (int16_t)OAM[nOAMEntry].y);
@@ -574,6 +594,10 @@ void olc2C02::clock()
 				{
 					if (sprite_count < 8)
 					{
+						if (nOAMEntry == 0)
+						{
+							bSpriteZeroHitPossible = true;
+						}
 						memcpy(&spriteScanline[sprite_count], &OAM[nOAMEntry], sizeof(sObjectAttributeEntry));
 						sprite_count ++;
 					}
@@ -582,12 +606,6 @@ void olc2C02::clock()
 			}
 
 			status.sprite_overflow = (sprite_count > 8);
-
-			for (uint8_t i = 0; i < 8; i++)
-			{
-				sprite_shifter_pattern_lo[i] = 0;
-				sprite_shifter_pattern_hi[i] = 0;
-			}
 		}
 
 		if (cycle == 340)
