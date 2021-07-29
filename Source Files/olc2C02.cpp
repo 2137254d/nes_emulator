@@ -144,7 +144,6 @@ uint8_t olc2C02::cpuRead(uint16_t addr, bool rdonly = false)
 			data = status.reg;
 			break;
 		case 0x0003: // OAM Address
-			data = oam_addr;
 			break;
 		case 0x0004: // OAM Data
 			break;
@@ -165,15 +164,15 @@ uint8_t olc2C02::cpuRead(uint16_t addr, bool rdonly = false)
 		case 0x0001: // Mask
 			break;
 		case 0x0002: // Status
-			status.vertical_blank = 1;
 			data = (status.reg & 0xE0) | (ppu_data_buffer & 0x1F);
 			status.vertical_blank = 0;
 			address_latch = 0;
 			break;
 		case 0x0003: // OAM Address
-			data = oam_addr;
+			
 			break;
 		case 0x0004: // OAM Data
+			data = pOAM[oam_addr];
 			break;
 		case 0x0005: // Scroll
 			break;
