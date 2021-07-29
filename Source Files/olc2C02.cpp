@@ -497,6 +497,16 @@ void olc2C02::clock()
 		if (scanline == -1 && cycle == 1)
 		{
 			status.vertical_blank = 0;
+
+			status.sprite_overflow = 0;
+
+			status.sprite_zero_hit = 0;
+
+			for (int i = 0; i < 8; i ++ )
+			{
+				sprite_shifter_pattern_lo[i] = 0;
+				sprite_shifter_pattern_hi[i] = 0;
+			}
 		}
 
 		if ((cycle >= 2 && cycle < 258) || (cycle >= 321 && cycle < 338))
@@ -567,7 +577,16 @@ void olc2C02::clock()
 
 			sprite_count = 0;
 
+			for (uint8_t i = 0; i < 8; i++)
+			{
+				sprite_shifter_pattern_lo[i] = 0;
+				sprite_shifter_pattern_hi[i] = 0;
+			}
+
 			uint8_t nOAMEntry = 0;
+
+			bSpriteZeroHitPossible = false;
+
 			while (nOAMEntry < 64 && sprite_count < 9)
 			{
 				int16_t diff = ((int16_t)scanline - (int16_t)OAM[nOAMEntry].y);
@@ -575,6 +594,10 @@ void olc2C02::clock()
 				{
 					if (sprite_count < 8)
 					{
+						if (nOAMEntry == 0)
+						{
+							bSpriteZeroHitPossible = true;
+						}
 						memcpy(&spriteScanline[sprite_count], &OAM[nOAMEntry], sizeof(sObjectAttributeEntry));
 						sprite_count ++;
 					}
@@ -583,12 +606,6 @@ void olc2C02::clock()
 			}
 
 			status.sprite_overflow = (sprite_count > 8);
-
-			for (uint8_t i = 0; i < 8; i++)
-			{
-				sprite_shifter_pattern_lo[i] = 0;
-				sprite_shifter_pattern_hi[i] = 0;
-			}
 		}
 
 		if (cycle == 340)
