@@ -17,5 +17,19 @@ public:
         MIRROR mirror();
 
 private: 
-        
+        uint8_t nCHRBankSelect4Lo = 0x00;
+        uint8_t nCHRBankSelec4HI = 0x00;
+        uint8_t nCHRBankSelect8 = 0x00;
+
+        uint8_t nPRGBankSelect16Lo = 0x00;
+        uint8_t nPRGBankSelect16Hi = 0x00;
+        uint8_t nPRGBankSelect32 = 0x00;
+
+        uint8_t nLoadRefister = 0x00;
+        uint8_t nLoadRegisterCount = 0x00;
+        uint8_t nControlREgister = 0x00;
+
+        MIRROR mirrormode = MIRROR::HORIZONTAL;
+
+        std::vector<uint8_t> vRAMStatic;
 };
