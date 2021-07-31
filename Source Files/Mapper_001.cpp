@@ -45,4 +45,33 @@ bool Mapper_001::cpuMapRead(uint16_t addr, uint32_t &mapped_addr, uint8_t &data)
             mapped_addr = nPRGBankSelect32 * 0x8000 + (addr & 0x7FFF);
         }
     }
+
+    return false;
+}
+
+bool Mapper_001::cpuMapWrite(uint16_t addr, uint32_t &mapped_addr, uint8_t data)
+{
+    if (addr >= 0x6000 && addr <= 0x7FFF)
+    {
+        mapped_addr = 0xFFFFFFFF;
+
+        vRAMStatic[addr & 0x1FFFF] = data; 
+
+        return true;
+    }
+
+    if (addr >= 0x8000)
+    {
+        if (data & 0x80)
+        {
+            nLoadRegister = 0x00;
+            nLoadRegisterCount = 0;
+            nControlRegister = nControlRegister | 0x0C;
+        }
+        else 
+        {
+
+        }
+        
+    }
 }
