@@ -27,7 +27,7 @@ private:
 
         uint8_t nLoadRefister = 0x00;
         uint8_t nLoadRegisterCount = 0x00;
-        uint8_t nControlREgister = 0x00;
+        uint8_t nControlRegister = 0x00;
 
         MIRROR mirrormode = MIRROR::HORIZONTAL;
 
