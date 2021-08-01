@@ -70,7 +70,31 @@ bool Mapper_001::cpuMapWrite(uint16_t addr, uint32_t &mapped_addr, uint8_t data)
         }
         else 
         {
+            nLoadRegister >>= 1;
+            nLoadRegister |= (data & 0x01) << 4;
+            nLoadRegisterCount++;
 
+            if (nLoadRegisterCount == 5)
+            {
+                uint8_t nTargetRegister = (addr >> 13) & 0x03;
+
+                if (nTargetRegister == 0)
+                {
+                    nControlRegister = nLoadRegister & 0x1F;
+
+                    switch(nControlRegister & 0x03)
+
+                    switch (nControlRegister & 0x03)
+                    {
+                        case 0: mirrormode = ONESCREEN_LO; break;
+                        case 1: mirrormode = ONESCREEN_HI; break;
+                        case 2: mirrormode = VERTICAL;     break;
+                        case 3: mirrormode = HORIZONTAL;   break;
+
+                    }
+                }
+                else if ()
+            }
         }
         
     }
