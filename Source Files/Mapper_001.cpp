@@ -142,3 +142,13 @@ bool Mapper_001::cpuMapWrite(uint16_t addr, uint32_t &mapped_addr, uint8_t data)
     return false;
 }
 
+bool Mapper_001::ppuMapRead(uint16_t addr, uint32 &mapped_addr)
+{
+    if (addr < 0x2000)
+    {
+        if (nCHRBanks == 0)
+        {
+            mapped_addr = addr;
+        }
+    }
+}
